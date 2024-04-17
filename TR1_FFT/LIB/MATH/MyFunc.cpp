@@ -1,13 +1,32 @@
 #include "MyFunc.h"
+#include "MyTextureManager.h"
+
+MyFunc::MyFunc() {
+	Init();
+}
+
+MyFunc::~MyFunc() {
+	Fin();
+}
+
+void MyFunc::Init() {
+	txm->Init();
+}
+
+void MyFunc::Fin() {
+	delete txm;
+}
+
+MyTextureManager* MyFunc::txm = new MyTextureManager;
 
 //何もしない関数
-void Void() { ; }
+void MyFunc::Void() { ; }
 
 //================================================================
 //                     ファイル操作の関数
 //================================================================
 //csvを読み込む関数
-std::vector<std::vector<int>>LoadFile(const std::string& csvFilePath) {
+std::vector<std::vector<int>>MyFunc::LoadFile(const std::string& csvFilePath) {
 
 	//最終結果を入れる配列
 	std::vector<std::vector<int>> intArray;
@@ -50,7 +69,7 @@ std::vector<std::vector<int>>LoadFile(const std::string& csvFilePath) {
 //                       時間の関数
 //================================================================
 //フレーム数を時計に変換する関数
-int FrameToClock(int count, int tranceMode) {
+int MyFunc::FrameToClock(int count, int tranceMode) {
 
 	int result = 0;
 	enum TranceMode {
@@ -85,19 +104,19 @@ int FrameToClock(int count, int tranceMode) {
 //================================================================
 
 //長さを求める関数
-float CheckLength(Vec2 pos1, Vec2 pos2) {
+float MyFunc::CheckLength(Vec2 pos1, Vec2 pos2) {
 	float xLength = (pos1.x - pos2.x);
 	float yLength = (pos1.y - pos2.y);
 	return sqrtf(xLength * xLength + yLength * yLength);
 }
-float CheckLength(float pos1x, float pos1y, float pos2x, float pos2y) {
+float MyFunc::CheckLength(float pos1x, float pos1y, float pos2x, float pos2y) {
 	float xLength = pos2x - pos1x;
 	float yLength = pos2y - pos1y;
 	return sqrtf(xLength * xLength + yLength * yLength);
 }
 
 //ノーマライズ関数
-Vec2 Normalize(Vec2 pos1, Vec2 pos2) {
+Vec2 MyFunc::Normalize(Vec2 pos1, Vec2 pos2) {
 
 	float xLength = (pos1.x - pos2.x);
 	float yLength = (pos1.y - pos2.y);
@@ -114,7 +133,7 @@ Vec2 Normalize(Vec2 pos1, Vec2 pos2) {
 };
 
 //内積を求める関数
-float Dot(Vec2 pos1, Vec2 pos2, Vec2 targetPos) {
+float MyFunc::Dot(Vec2 pos1, Vec2 pos2, Vec2 targetPos) {
 
 	Vec2 lineVector = { pos2.x - pos1.x,pos2.y - pos1.y };
 	float lineLength = sqrtf(lineVector.x * lineVector.x + lineVector.y * lineVector.y);
@@ -124,7 +143,7 @@ float Dot(Vec2 pos1, Vec2 pos2, Vec2 targetPos) {
 };
 
 //外積を求める関数
-float Cross(
+float MyFunc::Cross(
 	float lineStartX, float lineStartY,
 	float lineEndX, float lineEndY,
 	float targetX, float targetY
@@ -139,7 +158,7 @@ float Cross(
 	return ((lineLengthX * line2TargetY) - (lineLengthY * line2TargetX)) / lineLength;
 }
 
-float Cross(Vec2 pos1, Vec2 pos2, Vec2 targetPos) {
+float MyFunc::Cross(Vec2 pos1, Vec2 pos2, Vec2 targetPos) {
 	Vec2 lineVector = { pos2.x - pos1.x,pos2.y - pos1.y };
 	float lineLength = sqrtf(lineVector.x * lineVector.x + lineVector.y * lineVector.y);
 	Vec2 forTarget = { targetPos.x - pos1.x,targetPos.y - pos1.y };
@@ -148,7 +167,7 @@ float Cross(Vec2 pos1, Vec2 pos2, Vec2 targetPos) {
 }
 
 // ベクトルの交点を求める関数
-Vec2 CrossPos(Vec2 line1Pos1, Vec2 line1Pos2, Vec2 line2Pos1, Vec2 line2Pos2) {
+Vec2 MyFunc::CrossPos(Vec2 line1Pos1, Vec2 line1Pos2, Vec2 line2Pos1, Vec2 line2Pos2) {
 	float s1 =
 		((line2Pos2.x - line2Pos1.x) * (line1Pos1.y - line2Pos1.y) -
 			(line2Pos2.y - line2Pos1.y) * (line1Pos1.x - line2Pos1.x)) / 2.0f;
@@ -165,7 +184,7 @@ Vec2 CrossPos(Vec2 line1Pos1, Vec2 line1Pos2, Vec2 line2Pos1, Vec2 line2Pos2) {
 	return crossPos;
 }
 
-Vec2 CrossPos2(Vec2 line1Pos1, Vec2 line1Pos2, Vec2 line2Pos1, Vec2 line2Pos2) {
+Vec2 MyFunc::CrossPos2(Vec2 line1Pos1, Vec2 line1Pos2, Vec2 line2Pos1, Vec2 line2Pos2) {
 	float s1 =
 		((line2Pos2.x - line2Pos1.x) * (line1Pos1.y - line2Pos1.y) -
 			(line2Pos2.y - line2Pos1.y) * (line1Pos1.x - line2Pos1.x)) / 2.0f;
@@ -189,7 +208,7 @@ Vec2 CrossPos2(Vec2 line1Pos1, Vec2 line1Pos2, Vec2 line2Pos1, Vec2 line2Pos2) {
 }
 
 // 線を平行移動する関数
-Vec2 ShiftLine(Vec2 pos1, Vec2 pos2, float distance) {
+Vec2 MyFunc::ShiftLine(Vec2 pos1, Vec2 pos2, float distance) {
 
 	float dx = pos2.x - pos1.x;
 	float dy = pos2.y - pos1.y;
@@ -202,7 +221,7 @@ Vec2 ShiftLine(Vec2 pos1, Vec2 pos2, float distance) {
 	-normalizedX * distance
 	};
 }
-void ShiftLineCtrl(Vec2& pos1, Vec2& pos2, float distance) {
+void MyFunc::ShiftLineCtrl(Vec2& pos1, Vec2& pos2, float distance) {
 
 	float dx = pos2.x - pos1.x;
 	float dy = pos2.y - pos1.y;
@@ -220,11 +239,11 @@ void ShiftLineCtrl(Vec2& pos1, Vec2& pos2, float distance) {
 }
 
 // 負数を0に変換する関数
-int negaZero(int num) {
+int MyFunc::negaZero(int num) {
 	return (num < 0) ? 0 : num;
 }
 
-float negaZero(float num) {
+float MyFunc::negaZero(float num) {
 	return (num < 0) ? 0 : num;
 }
 
@@ -233,7 +252,7 @@ float negaZero(float num) {
 //================================================================
 
 // 加算
-Matrix2x2 Add(Matrix2x2 matrix1, Matrix2x2 matrix2) {
+Matrix2x2 MyFunc::Add(Matrix2x2 matrix1, Matrix2x2 matrix2) {
 
 	Matrix2x2 result;
 
@@ -245,7 +264,7 @@ Matrix2x2 Add(Matrix2x2 matrix1, Matrix2x2 matrix2) {
 
 	return result;
 };
-Matrix3x3 Add(Matrix3x3 matrix1, Matrix3x3 matrix2) {
+Matrix3x3 MyFunc::Add(Matrix3x3 matrix1, Matrix3x3 matrix2) {
 
 	Matrix3x3 result;
 
@@ -259,7 +278,7 @@ Matrix3x3 Add(Matrix3x3 matrix1, Matrix3x3 matrix2) {
 };
 
 // 減算
-Matrix2x2 Subtract(Matrix2x2 matrix1, Matrix2x2 matrix2) {
+Matrix2x2 MyFunc::Subtract(Matrix2x2 matrix1, Matrix2x2 matrix2) {
 
 	Matrix2x2 result;
 
@@ -271,7 +290,7 @@ Matrix2x2 Subtract(Matrix2x2 matrix1, Matrix2x2 matrix2) {
 
 	return result;
 };
-Matrix3x3 Subtract(Matrix3x3 matrix1, Matrix3x3 matrix2) {
+Matrix3x3 MyFunc::Subtract(Matrix3x3 matrix1, Matrix3x3 matrix2) {
 
 	Matrix3x3 result;
 
@@ -285,7 +304,7 @@ Matrix3x3 Subtract(Matrix3x3 matrix1, Matrix3x3 matrix2) {
 };
 
 //割る
-Matrix2x2 Devide(Matrix2x2 matrix, float devideNum) {
+Matrix2x2 MyFunc::Devide(Matrix2x2 matrix, float devideNum) {
 	Matrix2x2 result;
 
 	for (int i = 0; i < 2; i++) {
@@ -297,7 +316,7 @@ Matrix2x2 Devide(Matrix2x2 matrix, float devideNum) {
 	return result;
 };
 
-Matrix3x3 Devide(Matrix3x3 matrix, float devideNum) {
+Matrix3x3 MyFunc::Devide(Matrix3x3 matrix, float devideNum) {
 
 	Matrix3x3 result;
 
@@ -311,14 +330,14 @@ Matrix3x3 Devide(Matrix3x3 matrix, float devideNum) {
 };
 
 // 乗算
-Vec2 Multiply(Vec2 vector, Matrix2x2 matrix) {
+Vec2 MyFunc::Multiply(Vec2 vector, Matrix2x2 matrix) {
 
 	return {
 		vector.x * matrix.m[0][0] + vector.y * matrix.m[1][0],
 		vector.x * matrix.m[0][1] + vector.y * matrix.m[1][1]
 	};
 };
-Vec2 Multiply(Vec2 vector, Matrix3x3 matrix) {
+Vec2 MyFunc::Multiply(Vec2 vector, Matrix3x3 matrix) {
 	Vec2 result;
 	float w;
 
@@ -334,7 +353,7 @@ Vec2 Multiply(Vec2 vector, Matrix3x3 matrix) {
 
 	return result;
 };
-Matrix2x2 Multiply(Matrix2x2 matrix1, Matrix2x2 matrix2) {
+Matrix2x2 MyFunc::Multiply(Matrix2x2 matrix1, Matrix2x2 matrix2) {
 
 	Matrix2x2 result;
 
@@ -349,7 +368,7 @@ Matrix2x2 Multiply(Matrix2x2 matrix1, Matrix2x2 matrix2) {
 
 	return result;
 };
-Matrix3x3 Multiply(Matrix3x3 matrix1, Matrix3x3 matrix2) {
+Matrix3x3 MyFunc::Multiply(Matrix3x3 matrix1, Matrix3x3 matrix2) {
 
 	Matrix3x3 result;
 
@@ -366,7 +385,7 @@ Matrix3x3 Multiply(Matrix3x3 matrix1, Matrix3x3 matrix2) {
 	return result;
 };
 // 値を直接変える
-void Transform(Vec2& vector, Matrix3x3 matrix) {
+void MyFunc::Transform(Vec2& vector, Matrix3x3 matrix) {
 	Vec2 result;
 	float w;
 
@@ -384,7 +403,7 @@ void Transform(Vec2& vector, Matrix3x3 matrix) {
 };
 
 // 拡大縮小行列を作る関数
-Matrix3x3 ScaleMatrix(float scaleX, float scaleY) {
+Matrix3x3 MyFunc::ScaleMatrix(float scaleX, float scaleY) {
 	Matrix3x3 matrix;
 	matrix.m[0][0] = scaleX;
 	matrix.m[0][1] = 0;
@@ -401,7 +420,7 @@ Matrix3x3 ScaleMatrix(float scaleX, float scaleY) {
 	return matrix;
 };
 
-Matrix3x3 ScaleMatrix(Vec2 scaleXY) {
+Matrix3x3 MyFunc::ScaleMatrix(Vec2 scaleXY) {
 	Matrix3x3 matrix;
 	matrix.m[0][0] = scaleXY.x;
 	matrix.m[0][1] = 0;
@@ -418,7 +437,7 @@ Matrix3x3 ScaleMatrix(Vec2 scaleXY) {
 	return matrix;
 };
 // 回転行列を作る関数
-Matrix3x3 RotateMatrix(float theta) {
+Matrix3x3 MyFunc::RotateMatrix(float theta) {
 
 	Matrix3x3 result;
 	result.m[0][0] = cosf(theta);
@@ -436,7 +455,7 @@ Matrix3x3 RotateMatrix(float theta) {
 	return result;
 };
 // 平行移動行列を作る関数
-Matrix3x3 TranslateMatrix(float tx, float ty) {
+Matrix3x3 MyFunc::TranslateMatrix(float tx, float ty) {
 	Matrix3x3 matrix;
 	matrix.m[0][0] = 1;
 	matrix.m[0][1] = 0;
@@ -453,7 +472,7 @@ Matrix3x3 TranslateMatrix(float tx, float ty) {
 	return matrix;
 }
 
-Matrix3x3 TranslateMatrix(Vec2 txy) {
+Matrix3x3 MyFunc::TranslateMatrix(Vec2 txy) {
 	Matrix3x3 matrix;
 	matrix.m[0][0] = 1;
 	matrix.m[0][1] = 0;
@@ -471,7 +490,7 @@ Matrix3x3 TranslateMatrix(Vec2 txy) {
 }
 
 // アフィン行列を作る関数
-Matrix3x3 AffineMatrix(Vec2 scale, float rotateTheta, Vec2 translate) {
+Matrix3x3 MyFunc::AffineMatrix(Vec2 scale, float rotateTheta, Vec2 translate) {
 
 	Matrix3x3 matrix;
 	matrix.m[0][0] = scale.x * cosf(rotateTheta);
@@ -491,7 +510,7 @@ Matrix3x3 AffineMatrix(Vec2 scale, float rotateTheta, Vec2 translate) {
 
 
 //逆行列を求める関数
-Matrix2x2 InverseMatrix(Matrix2x2 matrix) {
+Matrix2x2 MyFunc::InverseMatrix(Matrix2x2 matrix) {
 
 	float det = (matrix.m[0][0] * matrix.m[1][1]) - (matrix.m[0][1] * matrix.m[1][0]);
 	assert(det != 0);
@@ -507,7 +526,7 @@ Matrix2x2 InverseMatrix(Matrix2x2 matrix) {
 	return Devide(result, det);
 };
 
-Matrix3x3 InverseMatrix(Matrix3x3 matrix) {
+Matrix3x3 MyFunc::InverseMatrix(Matrix3x3 matrix) {
 
 	float det =
 		(matrix.m[0][0] * matrix.m[1][1] * matrix.m[2][2]) +
@@ -536,7 +555,7 @@ Matrix3x3 InverseMatrix(Matrix3x3 matrix) {
 };
 
 //転置行列を求める関数
-Matrix2x2 Transpose(Matrix2x2 matrix) {
+Matrix2x2 MyFunc::Transpose(Matrix2x2 matrix) {
 
 	Matrix2x2 result;
 	result.m[0][0] = matrix.m[0][0];
@@ -548,7 +567,7 @@ Matrix2x2 Transpose(Matrix2x2 matrix) {
 	return result;
 };
 
-Matrix3x3 Transpose(Matrix3x3 matrix) {
+Matrix3x3 MyFunc::Transpose(Matrix3x3 matrix) {
 
 	Matrix3x3 result;
 	result.m[0][0] = matrix.m[0][0];
@@ -568,7 +587,7 @@ Matrix3x3 Transpose(Matrix3x3 matrix) {
 
 
 //正射影行列を求める関数
-Matrix3x3 OrthoMatrix(float left, float right, float top, float bottom) {
+Matrix3x3 MyFunc::OrthoMatrix(float left, float right, float top, float bottom) {
 
 	Matrix3x3 result;
 
@@ -588,7 +607,7 @@ Matrix3x3 OrthoMatrix(float left, float right, float top, float bottom) {
 };
 
 //ビューポート変換行列を求める関数
-Matrix3x3 ViewportMatrix(Vec2 size, Vec2 LeftTop) {
+Matrix3x3 MyFunc::ViewportMatrix(Vec2 size, Vec2 LeftTop) {
 
 	Matrix3x3 result;
 
@@ -609,7 +628,7 @@ Matrix3x3 ViewportMatrix(Vec2 size, Vec2 LeftTop) {
 
 
 //レンダリングパイプライン作る関数
-Matrix3x3 WvpVpMatrix(
+Matrix3x3 MyFunc::WvpVpMatrix(
 	Vec2 playerPos, Vec2 playerScale, float playerAngle,
 	Vec2 cameraPos, Vec2 cameraScale, float cameraAngle,
 	Vec2 cameraRange, Vec2 leftTop,
@@ -648,7 +667,7 @@ Matrix3x3 WvpVpMatrix(
 //                        行列の表示の関数
 //================================================================
 
-void MatrixScreenPrintf(int posX, int posY, Matrix2x2 matrix) {
+void MyFunc::MatrixScreenPrintf(int posX, int posY, Matrix2x2 matrix) {
 
 	for (int row = 0; row < 2; row++) {
 		for (int col = 0; col < 2; col++) {
@@ -663,7 +682,7 @@ void MatrixScreenPrintf(int posX, int posY, Matrix2x2 matrix) {
 	}
 };
 
-void MatrixScreenPrintf(int posX, int posY, Matrix3x3 matrix) {
+void MyFunc::MatrixScreenPrintf(int posX, int posY, Matrix3x3 matrix) {
 
 	for (int row = 0; row < 3; row++) {
 		for (int col = 0; col < 3; col++) {
@@ -678,7 +697,7 @@ void MatrixScreenPrintf(int posX, int posY, Matrix3x3 matrix) {
 	}
 };
 
-void Vec2ScreenPrintf(int posX, int posY, Vec2 vector) {
+void MyFunc::Vec2ScreenPrintf(int posX, int posY, Vec2 vector) {
 
 	Novice::ScreenPrintf(posX, posY, "%.02f", vector.x);
 	Novice::ScreenPrintf(posX + 64, posY, "%.02f", vector.y);
@@ -689,7 +708,7 @@ void Vec2ScreenPrintf(int posX, int posY, Vec2 vector) {
 //================================================================
 
 //回転していない矩形と円の当たり判定
-bool IsHitBox_Ball(Vec2 boxCenter, Vec2 ballPos, Vec2 boxSize, float ballRasius) {
+bool MyFunc::IsHitBox_Ball(Vec2 boxCenter, Vec2 ballPos, Vec2 boxSize, float ballRasius) {
 
 	float distX = ballPos.x - boxCenter.x;
 	float distY = ballPos.y - boxCenter.y;
@@ -749,7 +768,7 @@ bool IsHitBox_Ball(Vec2 boxCenter, Vec2 ballPos, Vec2 boxSize, float ballRasius)
 	}
 }
 //回転していない矩形と円の当たり判定(当たった面を返す)
-int IsHitBox_BallDirection(Vec2 boxCenter, Vec2 ballPos, Vec2 boxSize, float ballRasius) {
+int MyFunc::IsHitBox_BallDirection(Vec2 boxCenter, Vec2 ballPos, Vec2 boxSize, float ballRasius) {
 
 	float distX = ballPos.x - boxCenter.x;
 	float distY = ballPos.y - boxCenter.y;
@@ -857,7 +876,7 @@ int IsHitBox_BallDirection(Vec2 boxCenter, Vec2 ballPos, Vec2 boxSize, float bal
 /// <param name="GH">グラフハンドル</param>
 /// <param name="theta">矩形の角度</param>
 /// <param name="color">画像のカラーコード</param>
-void My::DrawQuad(
+void MyFunc::DrawQuad(
 	Vec2 center,
 	Vec2 size,
 	int drawPosX, int drawPosY,
@@ -904,7 +923,19 @@ void My::DrawQuad(
 		GH, color
 	);
 
-};
+}
+
+void MyFunc::DrawQuad(Vec2 center, Vec2 size, int drawPosX, int drawPosY, int drawWidth, int drawHight, float scaleX, float scaleY, std::string textureName, float theta, int color) {
+
+	DrawQuad(
+		center,
+		size,
+		drawPosX, drawPosY,
+		drawWidth, drawHight,
+		scaleX, scaleY,
+		txm->texture_[textureName], theta, color
+	);
+}
 
 // 中心点を基準に三角形を描く関数
 /// <summary>
@@ -914,7 +945,7 @@ void My::DrawQuad(
 /// <param name="radius">三角形の半径</param>
 /// <param name="theta">三角形の角度</param>
 /// <param name="color">三角形の色</param>
-void My::DrawTriangle(Vec2 center, float radius, float theta, int color) {
+void MyFunc::DrawTriangle(Vec2 center, float radius, float theta, int color) {
 
 	Vec2 vertex[3];
 	Vec2 preVertex[3];
@@ -962,7 +993,7 @@ void My::DrawTriangle(Vec2 center, float radius, float theta, int color) {
 /// <param name="radius">三角形の半径</param>
 /// <param name="theta">三角形の角度</param>
 /// <param name="color">三角形の色</param>
-void My::DrawTriangleWire(Vec2 center, float radius, float theta, int color) {
+void MyFunc::DrawTriangleWire(Vec2 center, float radius, float theta, int color) {
 
 	Vec2 vertex[3];
 	Vec2 preVertex[3];
@@ -1023,7 +1054,7 @@ void My::DrawTriangleWire(Vec2 center, float radius, float theta, int color) {
 /// <param name="radius">三角形の半径</param>
 /// <param name="theta">三角形の角度</param>
 /// <param name="color">三角形の色</param>
-void My::DrawStar(Vec2 center, float radius, Vec2 scale, float theta, int color) {
+void MyFunc::DrawStar(Vec2 center, float radius, Vec2 scale, float theta, int color) {
 
 	Vec2 vertex[5];
 	Vec2 preVertex[5];
@@ -1070,7 +1101,7 @@ void My::DrawStar(Vec2 center, float radius, Vec2 scale, float theta, int color)
 		);
 	}
 }
-void My::DrawStarWire(Vec2 center, float radius, Vec2 scale, float theta, int color) {
+void MyFunc::DrawStarWire(Vec2 center, float radius, Vec2 scale, float theta, int color) {
 
 	Vec2 vertex[5];
 	Vec2 preVertex[5];
@@ -1143,7 +1174,7 @@ void My::DrawStarWire(Vec2 center, float radius, Vec2 scale, float theta, int co
 /// <param name="theta">角度</param>
 /// <param name="color">色</param>
 /// <param name="fatLevel">太さレベル(0~1)</param>
-void My::DrawTwinkle(Vec2 center, Vec2 size, float theta, int color, float fatLevel) {
+void MyFunc::DrawTwinkle(Vec2 center, Vec2 size, float theta, int color, float fatLevel) {
 
 	//描画に必要な座標を格納する変数の宣言、初期化
 	Vec2 basePos[4] = { 0.0f,0.0f };
@@ -1239,7 +1270,7 @@ void My::DrawTwinkle(Vec2 center, Vec2 size, float theta, int color, float fatLe
 /// <param name="theta">角度</param>
 /// <param name="color">色</param>
 /// /// <param name="fatLevel">太さレベル(0~1)</param>
-void My::DrawSnow(Vec2 center, Vec2 size, float theta, int color, float fatLevel) {
+void MyFunc::DrawSnow(Vec2 center, Vec2 size, float theta, int color, float fatLevel) {
 
 	//white
 	int whiteGH = Novice::LoadTexture("white1x1.png");
@@ -1432,13 +1463,13 @@ void My::DrawSnow(Vec2 center, Vec2 size, float theta, int color, float fatLevel
 //================================================================
 
 //色の各要素を求める関数
-int Red(int color) { return (color >> 24) & 0xFF; }
-int Green(int color) { return (color >> 16) & 0xFF; }
-int Blue(int color) { return (color >> 8) & 0xFF; }
-int Alpha(int color) { return color & 0xFF; }
+int MyFunc::Red(int color) { return (color >> 24) & 0xFF; }
+int MyFunc::Green(int color) { return (color >> 16) & 0xFF; }
+int MyFunc::Blue(int color) { return (color >> 8) & 0xFF; }
+int MyFunc::Alpha(int color) { return color & 0xFF; }
 
 //色の差を任意の値で割り、割合も任意に決めて色を変える関数
-int ChangeColor(int startColor, int aimColor, float divideNum, float rate) {
+int MyFunc::ChangeColor(int startColor, int aimColor, float divideNum, float rate) {
 
 	//二色の差を求める
 	int difRed = Red(aimColor) - Red(startColor);
@@ -1463,7 +1494,7 @@ int ChangeColor(int startColor, int aimColor, float divideNum, float rate) {
 }
 
 //媒介変数tで色を変更する
-int ChangeColorT(int startColor, int aimColor, float t) {
+int MyFunc::ChangeColorT(int startColor, int aimColor, float t) {
 
 	//二色の差を求める
 	int difRed = Red(aimColor) - Red(startColor);
@@ -1481,7 +1512,7 @@ int ChangeColorT(int startColor, int aimColor, float t) {
 }
 
 //グレースケールを求める関数
-int GrayScale(int color) {
+int MyFunc::GrayScale(int color) {
 
 	int Red = (color >> 24) & 0xFF;
 	int Green = (color >> 16) & 0xFF;

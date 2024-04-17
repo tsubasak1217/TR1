@@ -77,6 +77,9 @@
     <Filter Include="Scene\Scenes\4_Clear">
       <UniqueIdentifier>{d2d42373-082f-4bb3-851e-f2a0aea0b108}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resources\MyTextureManager\Images">
+      <UniqueIdentifier>{13258780-791e-4f6b-ba59-3b0a4dc1f292}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="C:\KamataEngine\DirectXGame\base\DirectXCommon.cpp">

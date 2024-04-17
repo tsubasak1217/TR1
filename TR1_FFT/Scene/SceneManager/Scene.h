@@ -3,6 +3,7 @@
 #include "Environment.h"
 #include "InputKey.h"
 
+// 各シーンの基底クラス
 class Scene {
 
 public:
