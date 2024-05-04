@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include <Novice.h>
-#include "Environment.h"
+#include "GameManager.h"
 #include "InputKey.h"
 
 // 各シーンの基底クラス

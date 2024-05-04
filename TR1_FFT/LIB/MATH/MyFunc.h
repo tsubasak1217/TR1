@@ -86,6 +86,8 @@ public:
 	static int negaZero(int num);
 	static float negaZero(float num);
 
+	static Vec2 Int2Float(const Vector2<int>& value);
+
 	//================================================================
 	//                      行列の計算関数
 	//================================================================
@@ -152,7 +154,11 @@ public:
 	//                     オリジナル描画関数
 	//================================================================
 
-		//中心基準矩形
+	// ---------------スプライン曲線の頂点計算用の関数---------------------
+	static Vec2 Complement(Vec2 p1, Vec2 p2, Vec2 p3, Vec2 p4, float t);
+	static Vec2 CatmullRom(Vec2 p1, Vec2 p2, Vec2 p3, Vec2 p4, float t);
+
+	//中心基準矩形
 	static void DrawQuad(
 		Vec2 center,
 		Vec2 size,

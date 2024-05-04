@@ -80,6 +80,9 @@
     <Filter Include="Resources\MyTextureManager\Images">
       <UniqueIdentifier>{13258780-791e-4f6b-ba59-3b0a4dc1f292}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Objects">
+      <UniqueIdentifier>{669b6f37-3ff9-4a96-be79-c011a9f01a53}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="C:\KamataEngine\DirectXGame\base\DirectXCommon.cpp">
@@ -149,6 +152,9 @@
     <ClCompile Include="Scene\SceneManager\SceneManager.cpp">
       <Filter>Scene\SceneManager</Filter>
     </ClCompile>
+    <ClCompile Include="Container.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="C:\KamataEngine\DirectXGame\audio\Audio.h">
@@ -214,9 +220,6 @@
     <ClInclude Include="C:\KamataEngine\DirectXGame\3d\SpotLight.h">
       <Filter>KamataEngine\Include</Filter>
     </ClInclude>
-    <ClInclude Include="CONFIG\Environment.h">
-      <Filter>Config</Filter>
-    </ClInclude>
     <ClInclude Include="CONFIG\SAVEDATA\SaveData.h">
       <Filter>Config\SaveData</Filter>
     </ClInclude>
@@ -270,6 +273,12 @@
     </ClInclude>
     <ClInclude Include="Scene\SceneManager\SceneManager.h">
       <Filter>Scene\SceneManager</Filter>
+    </ClInclude>
+    <ClInclude Include="Container.h">
+      <Filter>Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="CONFIG\Environment.h">
+      <Filter>Config</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

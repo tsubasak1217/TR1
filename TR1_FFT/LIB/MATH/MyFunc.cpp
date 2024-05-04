@@ -247,6 +247,10 @@ float MyFunc::negaZero(float num) {
 	return (num < 0) ? 0 : num;
 }
 
+Vec2 MyFunc::Int2Float(const Vector2<int>& value) {
+	return {float(value.x),float(value.y)};
+}
+
 //================================================================
 //                        行列関数
 //================================================================
@@ -860,6 +864,32 @@ int MyFunc::IsHitBox_BallDirection(Vec2 boxCenter, Vec2 ballPos, Vec2 boxSize, f
 //================================================================
 //                     オリジナル描画関数
 //================================================================
+
+// ---------------スプライン曲線の頂点計算用の関数---------------------
+Vec2 MyFunc::Complement(Vec2 p1, Vec2 p2, Vec2 p3, Vec2 p4, float t) {
+	return(
+		(p1.operator*(-1.0f) + p2.operator*(3.0f) - p3.operator*(3.0f) + p4).operator*(t * t * t) +
+		(p1.operator*(2.0f) - p2.operator*(5.0f) + p3.operator*(4.0f) - p4).operator*(t * t) +
+		(p1.operator*(-1.0f) + p3).operator*(t) +
+		p2.operator*(2.0f)
+		).operator*(0.5f);
+}
+
+Vec2 MyFunc::CatmullRom(Vec2 p1, Vec2 p2, Vec2 p3, Vec2 p4, float t) {
+
+	t = std::clamp(t, 0.0f, 1.0f);// tを0~1に収める
+
+	if (t >= 0.0f && t < 0.33f) {// 1/3
+		return Complement(p1, p1, p2, p3, t / 0.33f);
+
+	} else if (t >= 0.33f && t < 0.66f) {// 2/3
+		return Complement(p1, p2, p3, p4, (t - 0.33f) / 0.33f);
+
+	} else {// 3/3
+		return Complement(p2, p3, p4, p4, (t - 0.66f) / 0.34f);
+	}
+}
+
 
 // 中心点を基準に矩形を描く関数
 /// <summary>

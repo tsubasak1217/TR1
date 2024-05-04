@@ -2,7 +2,7 @@
 #include "SceneManager.h"
 #include "Environment.h"
 #include "InputKey.h"
-
+#include "SceneManager.h"
 #include "Scene_Title.h"
 #include "Scene_Select.h"
 #include "Scene_Clear.h"

@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <Novice.h>
-#include "SceneManager.h"
+
+class SceneManager;
 
 class GameManager {
 
