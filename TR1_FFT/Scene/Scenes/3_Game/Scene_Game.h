@@ -1,6 +1,9 @@
 ﻿#pragma once
 #include "Scene.h"
 #include "Container.h"
+#include "VectorN.h"
+#include <vector>
+#include <complex>
 
 class Scene_Game final : public Scene {
 
@@ -20,5 +23,7 @@ private:
 	int getFrame_;
 	std::vector<Container> container_;
 
-	void Exponentiation(Container* container);
+	std::vector<float> Exponentiation(std::vector<float> data);
+	void Butterfly(std::vector<std::complex<float>>* data);
+	std::vector<std::complex<float>> FFT(const std::vector<float>& data);
 };
