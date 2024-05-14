@@ -280,5 +280,8 @@
     <ClInclude Include="CONFIG\Environment.h">
       <Filter>Config</Filter>
     </ClInclude>
+    <ClInclude Include="LIB\MATH\FFTResult.h">
+      <Filter>Lib\Math</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

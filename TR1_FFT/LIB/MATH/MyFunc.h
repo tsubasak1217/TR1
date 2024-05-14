@@ -15,6 +15,7 @@
 #include "Easing.h"
 #include "VectorN.h"
 #include "MatrixNxN.h"
+#include "FFTResult.h"
 
 class MyTextureManager;
 
@@ -56,8 +57,9 @@ public:
 	//================================================================
 
 	//長さを計る関数
-	static float CheckLength(Vec2 pos1, Vec2 pos2);
-	static float CheckLength(float pos1x, float pos1y, float pos2x, float pos2y);
+	static float Length(Vec2 pos1, Vec2 pos2);
+	static float Length(float pos1x, float pos1y, float pos2x, float pos2y);
+	static float Length(const Vec2& vec);
 
 	//ノーマライズ関数
 	static Vec2 Normalize(Vec2 pos1, Vec2 pos2);

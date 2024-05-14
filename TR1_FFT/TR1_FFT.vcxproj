@@ -154,6 +154,7 @@
     <ClInclude Include="INPUT\InputKey.h" />
     <ClInclude Include="LIB\CAMERA\Camera.h" />
     <ClInclude Include="LIB\MATH\Easing.h" />
+    <ClInclude Include="LIB\MATH\FFTResult.h" />
     <ClInclude Include="LIB\MATH\MyFunc.h" />
     <ClInclude Include="LIB\MATRIX\MatrixNxN.h" />
     <ClInclude Include="LIB\VECTOR\VectorN.h" />

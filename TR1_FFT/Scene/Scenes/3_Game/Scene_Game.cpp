@@ -5,11 +5,11 @@
 #include "Scene_Transition.h"
 #include "SceneManager.h"
 #include "Environment.h"
-#include "MyFunc.h"
 #include "MyTextureManager.h"
 
 
 std::complex<float> a;
+float theta = 0.0f;
 
 Scene_Game::Scene_Game() {
 	Init();
@@ -22,13 +22,40 @@ void Scene_Game::Init() {
 	isDraw_ = false;
 	frameCount_ = 0;
 	getFrame_ = 4;
+	nyquist_ = (60.0f / float(getFrame_)) * 0.5f;// 最大周波数
 	container_.clear();
+	container_.push_back(Container());
 }
 
 void Scene_Game::Update() {
 	if(InputKey::trigger[DIK_RETURN]) {
 		//SceneManager::SetScene(new Scene_Clear());
-		container_.push_back(Container());
+
+		// データをFFTする
+		FFTX_ = FFT(container_.back().positionX_);
+		FFTY_ = FFT(container_.back().positionY_);
+
+		// データを解析する
+		resultX_ = TransformFFT(FFTX_, nyquist_,true);
+		resultY_ = TransformFFT(FFTY_, nyquist_,false);
+
+		// コンテナにコピー
+		container_.back().resultX_ = resultX_;
+		container_.back().resultY_ = resultY_;
+		container_.back().isDrawFourier_ = true;
+
+		// データをソートする
+		//resultX_ = SortFFT(resultX_);
+		//resultY_ = SortFFT(resultY_);
+
+		// 振幅の最大値を渡す
+		if(resultX_[0].level > resultY_[0].level){
+			container_.back().maxLevel_ = resultX_[0].level;
+		} else{
+			container_.back().maxLevel_ = resultY_[0].level;
+		}
+
+		isDrawFourier_ = true;
 	}
 
 	// 描画フラグをオンにする
@@ -36,7 +63,12 @@ void Scene_Game::Update() {
 		if(InputKey::mousePos_.y >= windowLT.y && InputKey::mousePos_.y <= windowRB.y) {
 			if(InputKey::mouseTrigger_[0]) {
 				isDraw_ = true;
-				container_.push_back(Container());
+				container_.back().positionX_.clear();
+				container_.back().positionY_.clear();
+
+				isDrawFourier_ = false;
+				container_.back().isDrawFourier_ = false;
+				theta = 0.0f;
 			}
 		}
 	}
@@ -54,16 +86,55 @@ void Scene_Game::Update() {
 
 		// getFrameのフレームごとに座標を取得してコンテナに入れる
 		if(frameCount_ % getFrame_ == 0) {
-			container_.back().positions_.push_back({
-				float(InputKey::mousePos_.x),
-				float(InputKey::mousePos_.y)
-				}
+			container_.back().positionX_.push_back(
+				float(InputKey::mousePos_.x) - windowCenter.x
+			);
+
+			container_.back().positionY_.push_back(
+				float(InputKey::mousePos_.y) - windowCenter.y
 			);
 		}
+	}
+
+	if(isDrawFourier_){
+
+		if(frameCount_ % getFrame_ == 0){
+
+			// 初期化
+			fourierPoint_ = { 0.0f,0.0f };
+
+			for(int i = 0; i < resultX_.size(); i++){
+
+				// 角度を加算していく
+				//resultX_[i].currentTheta += resultX_[i].theta;
+				//resultY_[i].currentTheta += resultY_[i].theta;
+
+				// 座標の決定
+				fourierPoint_.x += resultX_[i].level * std::cos(resultX_[i].phase + i * theta);
+				fourierPoint_.y += resultY_[i].level * std::sin(resultY_[i].phase + i * -theta);
+			}
+		
+			theta += ((2.0f * float(M_PI)) / resultX_.size());
+			if(theta > 2.0f * 3.14f){
+				theta = 0.0f;
+			}
+		}
+
 	}
 }
 
 void Scene_Game::Draw() {
+
+	MyFunc::DrawQuad(
+		windowCenter,
+		{ (float)kWindowSizeX ,(float)kWindowSizeY},
+		0, 0,
+		1, 1,
+		1.0f, 1.0f,
+		"white1x1",
+		0.0f,
+		0x141136ff
+	);
 
 	MyFunc::DrawQuad(
 		windowCenter,
@@ -80,60 +151,24 @@ void Scene_Game::Draw() {
 		container_.back().Draw(getFrame_);
 	}
 
-	std::vector<double>test(8, 0);
 
-	test = {
-		1.5,
-		-3.2,
-		2.0,
-		0.25,
-		3.0,
-		1.0,
-		4.05,
-		3.14
-	};
+	if(isDrawFourier_){
 
-	std::vector<std::complex<double>>aaa(8);
-	std::vector<float>test2(8, 0);
-	for(int i = 0; i < 8; i++){
-		aaa[i].real(test[i]);
-		test2[i] = float(test[i]);
+		Novice::DrawEllipse(
+			int(windowCenter.x + fourierPoint_.x),
+			int(windowCenter.y + fourierPoint_.y),
+			20, 20, 0.0f,
+			0x000000ff,
+			kFillModeSolid
+		);
 	}
 
-	std::vector<std::complex<double>>c = aaa;
-
-	aaa[0] = c[0];
-	aaa[1] = c[4];
-	aaa[2] = c[2];
-	aaa[3] = c[6];
-	aaa[4] = c[1];
-	aaa[5] = c[5];
-	aaa[6] = c[3];
-	aaa[7] = c[7];
-
-	std::vector<std::complex<double>>b = aaa;
-
-	b[0] = ((aaa[0] + aaa[4]) + (aaa[2] + aaa[6])) + ((aaa[1] + aaa[5]) + (aaa[3] + aaa[7]));
-	b[1] = ((aaa[0] + aaa[4]) + (aaa[2] + aaa[6])) - ((aaa[1] + aaa[5]) + (aaa[3] + aaa[7]));
-	b[2] = ((aaa[0] + aaa[4]) - (aaa[2] + aaa[6])) + ((aaa[1] + aaa[5]) - (aaa[3] + aaa[7])) * std::pow(std::polar(1.0, -2.0 * M_PI / 4.0),1);
-	b[3] = ((aaa[0] + aaa[4]) - (aaa[2] + aaa[6])) - ((aaa[1] + aaa[5]) - (aaa[3] + aaa[7])) * std::pow(std::polar(1.0, -2.0 * M_PI / 4.0), 1);
-	b[4] = ((aaa[0] - aaa[4]) + (aaa[2] - aaa[6]) * std::pow(std::polar(1.0, -2.0 * M_PI / 8.0), 2)) + ((aaa[1] - aaa[5]) * std::pow(std::polar(1.0, -2.0 * M_PI / 8.0), 1) + (aaa[3] - aaa[7]) * std::pow(std::polar(1.0, -2.0 * M_PI / 8.0), 3));
-	b[5] = ((aaa[0] - aaa[4]) + (aaa[2] - aaa[6]) * std::pow(std::polar(1.0, -2.0 * M_PI / 8.0), 2)) - ((aaa[1] - aaa[5]) * std::pow(std::polar(1.0, -2.0 * M_PI / 8.0), 1) + (aaa[3] - aaa[7]) * std::pow(std::polar(1.0, -2.0 * M_PI / 8.0), 3));
-	b[6] = ((aaa[0] - aaa[4]) - (aaa[2] - aaa[6]) * std::pow(std::polar(1.0, -2.0 * M_PI / 8.0), 2)) + ((aaa[1] - aaa[5]) * std::pow(std::polar(1.0, -2.0 * M_PI / 8.0), 1) - (aaa[3] - aaa[7]) * std::pow(std::polar(1.0, -2.0 * M_PI / 8.0), 3)) * std::pow(std::polar(1.0, -2.0 * M_PI / 4.0), 1);
-	b[7] = ((aaa[0] - aaa[4]) - (aaa[2] - aaa[6]) * std::pow(std::polar(1.0, -2.0 * M_PI / 8.0), 2)) - ((aaa[1] - aaa[5]) * std::pow(std::polar(1.0, -2.0 * M_PI / 8.0), 1) - (aaa[3] - aaa[7]) * std::pow(std::polar(1.0, -2.0 * M_PI / 8.0), 3)) * std::pow(std::polar(1.0, -2.0 * M_PI / 4.0), 1);
-
-	std::vector<std::complex<float>>result = FFT(test2);
-
-	for(int i = 0; i < result.size(); i++){
-		Novice::ScreenPrintf(5, 80 + i * 20, "result[%d] : { %f,  %f }", i, result[i].real(), result[i].imag());
-		Novice::ScreenPrintf(5, 80 + int(result.size()) * 20 + i * 20, "b[%d] : { %lf,  %lf }", i, b[i].real(), b[i].imag());
-	}
 
 #ifdef _DEBUG
 	Novice::ScreenPrintf(20, 20, "scene: Game");
 	Novice::ScreenPrintf(20, 40, "container size: %d", container_.size());
 	if(container_.size() > 0) {
-		Novice::ScreenPrintf(20, 60, "points: %d", container_.back().positions_.size());
+		Novice::ScreenPrintf(20, 60, "points: %d", container_.back().positionX_.size());
 	}
 #endif //_DEBUG
 }
@@ -216,6 +251,47 @@ std::vector<std::complex<float>> Scene_Game::FFT(const std::vector<float>& data)
 
 	// バタフライ演算をして結果を求める
 	Butterfly(&result);
+
+	return result;
+}
+
+// FFTデータを振幅、位相、周波数の要素に分けて格納する
+std::vector<FFTResult> Scene_Game::TransformFFT(const std::vector<std::complex<float>>& data, float nyquist,bool XorY)
+{
+	// データ1刻みごとの周波数の変化(ラジアンに変換する)を計算
+	float thetaEvery = (nyquist / float(data.size())) * (2.0f * float(M_PI));
+
+	// 結果を格納する変数
+	std::vector<FFTResult> result(data.size());
+	
+	for(int i = 0; i < result.size(); i++){
+		Vec2 vec = { data[i].real(),data[i].imag() };// 複素数からベクトルに変換
+
+		result[i].level = MyFunc::Length(vec)/ result.size();// 絶対値が振幅の大きさ
+		if(XorY == true){
+			result[i].phase = std::atan2(vec.y, vec.x);// 位相
+		} else{
+			result[i].phase = std::atan2(vec.x, vec.y);// 位相
+		}
+		result[i].theta = thetaEvery * i;// 周波数(sin関数で扱う際のラジアン)
+		result[i].currentTheta = result[i].phase;
+	}
+
+	return result;
+}
+
+// 絶対値が大きい要素順に並び替える
+std::vector<FFTResult> Scene_Game::SortFFT(const std::vector<FFTResult>& data)
+{
+	std::vector<FFTResult>result = data;
+
+	for(int i = 0; i < data.size() - 1; ++i) {
+		for(int j = 0; j < data.size() - i - 1; ++j) {
+			if(result[j].level < result[j + 1].level) {
+				std::swap(result[j], result[j + 1]);
+			}
+		}
+	}
 
 	return result;
 }

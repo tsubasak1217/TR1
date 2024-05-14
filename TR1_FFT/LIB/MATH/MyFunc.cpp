@@ -104,15 +104,20 @@ int MyFunc::FrameToClock(int count, int tranceMode) {
 //================================================================
 
 //長さを求める関数
-float MyFunc::CheckLength(Vec2 pos1, Vec2 pos2) {
+float MyFunc::Length(Vec2 pos1, Vec2 pos2) {
 	float xLength = (pos1.x - pos2.x);
 	float yLength = (pos1.y - pos2.y);
 	return sqrtf(xLength * xLength + yLength * yLength);
 }
-float MyFunc::CheckLength(float pos1x, float pos1y, float pos2x, float pos2y) {
+float MyFunc::Length(float pos1x, float pos1y, float pos2x, float pos2y) {
 	float xLength = pos2x - pos1x;
 	float yLength = pos2y - pos1y;
 	return sqrtf(xLength * xLength + yLength * yLength);
+}
+
+float MyFunc::Length(const Vec2& vec)
+{
+	return sqrtf(vec.x * vec.x + vec.y * vec.y);
 }
 
 //ノーマライズ関数
@@ -120,7 +125,7 @@ Vec2 MyFunc::Normalize(Vec2 pos1, Vec2 pos2) {
 
 	float xLength = (pos1.x - pos2.x);
 	float yLength = (pos1.y - pos2.y);
-	float length = CheckLength(pos1, pos2);
+	float length = Length(pos1, pos2);
 
 	if (length != 0) {
 		return {
@@ -740,14 +745,14 @@ bool MyFunc::IsHitBox_Ball(Vec2 boxCenter, Vec2 ballPos, Vec2 boxSize, float bal
 
 		if (distX < 0 && distY < 0) {
 			if (
-				CheckLength(boxCenter.x - boxSize.x / 2.0f, boxCenter.y - boxSize.y / 2.0f, ballPos.x, ballPos.y) <= ballRasius) {
+				Length(boxCenter.x - boxSize.x / 2.0f, boxCenter.y - boxSize.y / 2.0f, ballPos.x, ballPos.y) <= ballRasius) {
 				return true;
 			} else {
 				return false;
 			}
 		} else if (distX >= 0 && distY < 0) {
 			if (
-				CheckLength(boxCenter.x + boxSize.x / 2.0f, boxCenter.y - boxSize.y / 2.0f, ballPos.x, ballPos.y) <= ballRasius) {
+				Length(boxCenter.x + boxSize.x / 2.0f, boxCenter.y - boxSize.y / 2.0f, ballPos.x, ballPos.y) <= ballRasius) {
 				return true;
 			} else {
 				return false;
@@ -755,7 +760,7 @@ bool MyFunc::IsHitBox_Ball(Vec2 boxCenter, Vec2 ballPos, Vec2 boxSize, float bal
 
 		} else if (distX < 0 && distY >= 0) {
 			if (
-				CheckLength(boxCenter.x - boxSize.x / 2.0f, boxCenter.y + boxSize.y / 2.0f, ballPos.x, ballPos.y) <= ballRasius) {
+				Length(boxCenter.x - boxSize.x / 2.0f, boxCenter.y + boxSize.y / 2.0f, ballPos.x, ballPos.y) <= ballRasius) {
 				return true;
 			} else {
 				return false;
@@ -763,7 +768,7 @@ bool MyFunc::IsHitBox_Ball(Vec2 boxCenter, Vec2 ballPos, Vec2 boxSize, float bal
 
 		} else {
 			if (
-				CheckLength(boxCenter.x + boxSize.x / 2.0f, boxCenter.y + boxSize.y / 2.0f, ballPos.x, ballPos.y) <= ballRasius) {
+				Length(boxCenter.x + boxSize.x / 2.0f, boxCenter.y + boxSize.y / 2.0f, ballPos.x, ballPos.y) <= ballRasius) {
 				return true;
 			} else {
 				return false;
@@ -808,7 +813,7 @@ int MyFunc::IsHitBox_BallDirection(Vec2 boxCenter, Vec2 ballPos, Vec2 boxSize, f
 	} else {
 
 		if (distX < 0 && distY >= 0) {//左上
-			if (CheckLength(boxCenter.x - boxSize.x / 2.0f, boxCenter.y + boxSize.y / 2.0f, ballPos.x, ballPos.y) <= ballRasius) {
+			if (Length(boxCenter.x - boxSize.x / 2.0f, boxCenter.y + boxSize.y / 2.0f, ballPos.x, ballPos.y) <= ballRasius) {
 
 				if (sqrtf(powf(distX, 2.0f)) < sqrtf(powf(distY, 2.0f))) {
 					return 1;//上面に当たった
@@ -820,7 +825,7 @@ int MyFunc::IsHitBox_BallDirection(Vec2 boxCenter, Vec2 ballPos, Vec2 boxSize, f
 				return false;
 			}
 		} else if (distX >= 0 && distY >= 0) {//右上
-			if (CheckLength(boxCenter.x + boxSize.x / 2.0f, boxCenter.y + boxSize.y / 2.0f, ballPos.x, ballPos.y) <= ballRasius) {
+			if (Length(boxCenter.x + boxSize.x / 2.0f, boxCenter.y + boxSize.y / 2.0f, ballPos.x, ballPos.y) <= ballRasius) {
 
 				if (sqrtf(powf(distX, 2.0f)) < sqrtf(powf(distY, 2.0f))) {
 					return 1;//上面に当たった
@@ -833,7 +838,7 @@ int MyFunc::IsHitBox_BallDirection(Vec2 boxCenter, Vec2 ballPos, Vec2 boxSize, f
 			}
 
 		} else if (distX < 0 && distY < 0) {//左下
-			if (CheckLength(boxCenter.x - boxSize.x / 2.0f, boxCenter.y - boxSize.y / 2.0f, ballPos.x, ballPos.y) <= ballRasius) {
+			if (Length(boxCenter.x - boxSize.x / 2.0f, boxCenter.y - boxSize.y / 2.0f, ballPos.x, ballPos.y) <= ballRasius) {
 
 				if (sqrtf(powf(distX, 2.0f)) < sqrtf(powf(distY, 2.0f))) {
 					return 3;//上面に当たった
@@ -846,7 +851,7 @@ int MyFunc::IsHitBox_BallDirection(Vec2 boxCenter, Vec2 ballPos, Vec2 boxSize, f
 			}
 
 		} else {//右下
-			if (CheckLength(boxCenter.x + boxSize.x / 2.0f, boxCenter.y - boxSize.y / 2.0f, ballPos.x, ballPos.y) <= ballRasius) {
+			if (Length(boxCenter.x + boxSize.x / 2.0f, boxCenter.y - boxSize.y / 2.0f, ballPos.x, ballPos.y) <= ballRasius) {
 
 				if (sqrtf(powf(distX, 2.0f)) < sqrtf(powf(distY, 2.0f))) {
 					return 3;//上面に当たった
