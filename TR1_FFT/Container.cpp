@@ -76,7 +76,7 @@ void Container::Draw(int getFrame) {
 		}
 
 
-		if(isDrawFourier_){
+		/*if(isDrawFourier_){
 
 			float devideEvery = ((windowCenter.x - canvasSize.x * 0.5f) * 0.95f) / resultX_.size();
 			float sukima = ((windowCenter.x - canvasSize.x * 0.5f) * 0.05f) * 0.5f;
@@ -102,6 +102,6 @@ void Container::Draw(int getFrame) {
 					0xf542efff
 				);
 			}
-		}
+		}*/
 	}
 }

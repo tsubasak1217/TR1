@@ -6,6 +6,7 @@
 struct Container {
 	std::vector<float>positionX_;
 	std::vector<float>positionY_;
+	std::vector<std::complex<float>>position_;
 
 	std::vector<FFTResult> resultX_;
 	std::vector<FFTResult> resultY_;

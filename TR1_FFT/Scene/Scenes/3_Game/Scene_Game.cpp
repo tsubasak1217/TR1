@@ -32,15 +32,13 @@ void Scene_Game::Update() {
 		//SceneManager::SetScene(new Scene_Clear());
 
 		// データをFFTする
-		FFTX_ = FFT(container_.back().positionX_);
-		FFTY_ = FFT(container_.back().positionY_);
+		FFTResult_ = FFT(container_.back().position_);
 
 		// データを解析する
-		resultX_ = TransformFFT(FFTX_, nyquist_,true);
-		resultY_ = TransformFFT(FFTY_, nyquist_,false);
+		result_ = TransformFFT(FFTResult_, nyquist_,true);
 
 		// コンテナにコピー
-		container_.back().resultX_ = resultX_;
+		container_.back().resultX_ = result_;
 		container_.back().resultY_ = resultY_;
 		container_.back().isDrawFourier_ = true;
 
@@ -49,11 +47,11 @@ void Scene_Game::Update() {
 		//resultY_ = SortFFT(resultY_);
 
 		// 振幅の最大値を渡す
-		if(resultX_[0].level > resultY_[0].level){
-			container_.back().maxLevel_ = resultX_[0].level;
+		/*if(result_[0].level > resultY_[0].level){
+			container_.back().maxLevel_ = result_[0].level;
 		} else{
 			container_.back().maxLevel_ = resultY_[0].level;
-		}
+		}*/
 
 		isDrawFourier_ = true;
 	}
@@ -65,6 +63,7 @@ void Scene_Game::Update() {
 				isDraw_ = true;
 				container_.back().positionX_.clear();
 				container_.back().positionY_.clear();
+				container_.back().position_.clear();
 
 				isDrawFourier_ = false;
 				container_.back().isDrawFourier_ = false;
@@ -93,6 +92,12 @@ void Scene_Game::Update() {
 			container_.back().positionY_.push_back(
 				float(InputKey::mousePos_.y) - windowCenter.y
 			);
+
+			container_.back().position_.push_back({
+				float(InputKey::mousePos_.x) - windowCenter.x,
+				float(InputKey::mousePos_.y) - windowCenter.y
+				}
+			);
 		}
 	}
 
@@ -103,18 +108,18 @@ void Scene_Game::Update() {
 			// 初期化
 			fourierPoint_ = { 0.0f,0.0f };
 
-			for(int i = 0; i < resultX_.size(); i++){
+			for(int i = 0; i < result_.size(); i++){
 
 				// 角度を加算していく
 				//resultX_[i].currentTheta += resultX_[i].theta;
 				//resultY_[i].currentTheta += resultY_[i].theta;
 
 				// 座標の決定
-				fourierPoint_.x += resultX_[i].level * std::cos(resultX_[i].phase + i * theta);
-				fourierPoint_.y += resultY_[i].level * std::sin(resultY_[i].phase + i * -theta);
+				fourierPoint_.x += result_[i].level * std::cos(result_[i].phase + i * theta);
+				fourierPoint_.y += result_[i].level * std::sin(result_[i].phase + i * -theta);
 			}
 		
-			theta += ((2.0f * float(M_PI)) / resultX_.size());
+			theta += ((2.0f * float(M_PI)) / result_.size()) * 0.01f;
 			if(theta > 2.0f * 3.14f){
 				theta = 0.0f;
 			}
@@ -176,7 +181,7 @@ void Scene_Game::Draw() {
 void Scene_Game::Fin() {
 }
 
-std::vector<float> Scene_Game::Exponentiation(std::vector<float> data) {
+std::vector<std::complex<float>> Scene_Game::Exponentiation(std::vector<std::complex<float>> data) {
 
 	assert(data.size() >= 2);
 
@@ -221,10 +226,10 @@ void Scene_Game::Butterfly(std::vector<std::complex<float>>* data)
 	}
 }
 
-std::vector<std::complex<float>> Scene_Game::FFT(const std::vector<float>& data)
+std::vector<std::complex<float>> Scene_Game::FFT(const std::vector<std::complex<float>>& data)
 {
 	// データ数を2の累乗にする
-	std::vector<float>exData = Exponentiation(data);
+	std::vector<std::complex<float>>exData = Exponentiation(data);
 	std::vector<std::complex<float>>result(exData.size(), 0);
 
 	// 要素を表すのに必要な最低のビット数を求める
@@ -246,7 +251,8 @@ std::vector<std::complex<float>> Scene_Game::FFT(const std::vector<float>& data)
 		}
 
 		// 反転して求めた要素を複素数ベクトルの実部に代入
-		result[i].real(exData[reserved]);
+		result[i].real(exData[reserved].real());
+		result[i].imag(exData[reserved].imag());
 	}
 
 	// バタフライ演算をして結果を求める

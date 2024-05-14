@@ -23,9 +23,9 @@ private:
 	int frameCount_;
 	int getFrame_;
 	std::vector<Container> container_;
-	std::vector<std::complex<float>> FFTX_;
+	std::vector<std::complex<float>> FFTResult_;
 	std::vector<std::complex<float>> FFTY_;
-	std::vector<FFTResult> resultX_;
+	std::vector<FFTResult> result_;
 	std::vector<FFTResult> resultY_;
 	float nyquist_;
 
@@ -33,9 +33,9 @@ private:
 	Vec2 fourierPoint_;
 
 private:
-	std::vector<float> Exponentiation(std::vector<float> data);
+	std::vector<std::complex<float>> Exponentiation(std::vector<std::complex<float>> data);
 	void Butterfly(std::vector<std::complex<float>>* data);
-	std::vector<std::complex<float>> FFT(const std::vector<float>& data);
+	std::vector<std::complex<float>> FFT(const std::vector<std::complex<float>>& data);
 
 	std::vector<FFTResult> TransformFFT(const std::vector<std::complex<float>>& data,float nyquist,bool XorY);
 	std::vector<FFTResult> SortFFT(const std::vector<FFTResult>& data);
