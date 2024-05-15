@@ -30,7 +30,7 @@ private:
 	float nyquist_;
 
 	bool isDrawFourier_;
-	Vec2 fourierPoint_;
+	Vec2 fourierPoint_[2];
 
 private:
 	std::vector<float> Exponentiation(std::vector<float> data);

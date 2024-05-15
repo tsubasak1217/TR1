@@ -131,8 +131,8 @@ void Scene_Game::Draw() {
 	if(isDrawFourier_){
 
 		Novice::DrawEllipse(
-			int(windowCenter.x + fourierPoint_.x),
-			int(windowCenter.y + fourierPoint_.y),
+			int(windowCenter.x + fourierPoint_[0].x),
+			int(windowCenter.y + fourierPoint_[1].y),
 			20, 20, 0.0f,
 			0x000000ff,
 			kFillModeSolid
@@ -145,7 +145,8 @@ void Scene_Game::Draw() {
 		if(frameCount_ % getFrame_ == 0){
 
 			// 初期化
-			fourierPoint_ = { 0.0f,0.0f };
+			fourierPoint_[0] = {0.0f,0.0f};
+			fourierPoint_[1] = { 0.0f,0.0f };
 
 			for(int i = 0; i < resultX_.size(); i++){
 
@@ -153,48 +154,132 @@ void Scene_Game::Draw() {
 				//resultX_[i].currentTheta += resultX_[i].theta;
 				//resultY_[i].currentTheta += resultY_[i].theta;
 
-				Vec2 tmpPos = fourierPoint_;
+				Vec2 tmpPos1 = fourierPoint_[0];
+				Vec2 tmpPos2 = fourierPoint_[1];
 				//float r = MyFunc::Length({ resultX_[i].level,resultY_[i].level });
 
-				Novice::DrawEllipse(
-					int(fourierPoint_.x + windowCenter.x),
-					int(fourierPoint_.y + windowCenter.y),
-					int(resultX_[i].level),
+				/*Novice::DrawEllipse(
+					int(fourierPoint_[1].x + windowCenter.x + canvasSize.x * 0.5f),
+					int(fourierPoint_[1].y + windowCenter.y),
+					int(resultY_[i].level),
 					int(resultY_[i].level),
 					0.0f,
-					0x000000ff,
+					0x00ff00ff,
+					kFillModeWireFrame
+				);*/
+
+				MyFunc::DrawQuad(
+					Vec2(
+					fourierPoint_[1].x + windowCenter.x + canvasSize.x * 0.5f,
+					fourierPoint_[1].y + windowCenter.y),
+					Vec2(
+					resultY_[i].level,
+					resultY_[i].level),
+					0,0,1080,1080,
+					1.0f,1.0f,
+					"ellipseLine",
+					0.0f,
+					0x00ff00ff
+				);
+
+				Novice::DrawEllipse(
+					int(fourierPoint_[0].x + windowCenter.x),
+					int(fourierPoint_[0].y + windowCenter.y + canvasSize.y * 0.5f),
+					int(resultX_[i].level),
+					int(resultX_[i].level),
+					0.0f,
+					0x00ff00ff,
 					kFillModeWireFrame
 				);
 
 				// 座標の決定
-				fourierPoint_.x += resultX_[i].level * std::cos(resultX_[i].phase + (i + 1) * theta);
-				fourierPoint_.y += resultY_[i].level * std::sin(resultY_[i].phase + (i + 1) * theta);
+				fourierPoint_[0].x += resultX_[i].level * std::cos(resultX_[i].phase + (i + 1) * theta);
+				fourierPoint_[0].y += resultX_[i].level * std::sin(resultX_[i].phase + (i + 1) * theta);
+
+				fourierPoint_[1].x += resultY_[i].level * std::cos(resultY_[i].phase + (i + 1) * theta);
+				fourierPoint_[1].y += resultY_[i].level * std::sin(resultY_[i].phase + (i + 1) * theta);
+				if(i != resultX_.size() - 1){
 
 				Novice::DrawLine(
-					int(tmpPos.x + windowCenter.x),
-					int(tmpPos.y + windowCenter.y),
-					int(fourierPoint_.x + windowCenter.x),
-					int(fourierPoint_.y + windowCenter.y),
-					0x000000ff
+					int(tmpPos2.x + windowCenter.x + canvasSize.x * 0.5f),
+					int(tmpPos2.y + windowCenter.y),
+					int(fourierPoint_[1].x + windowCenter.x + canvasSize.x * 0.5f),
+					int(fourierPoint_[1].y + windowCenter.y),
+					0x00ff00ff
 				);
 
-				Novice::DrawEllipse(
-					int(fourierPoint_.x + windowCenter.x),
-					int(fourierPoint_.y + windowCenter.y),
-					4,
-					4,
-					0.0f,
-					0x000000ff,
-					kFillModeSolid
+				Novice::DrawLine(
+					int(tmpPos1.x + windowCenter.x),
+					int(tmpPos1.y + windowCenter.y + canvasSize.y * 0.5f),
+					int(fourierPoint_[0].x + windowCenter.x),
+					int(fourierPoint_[0].y + windowCenter.y + canvasSize.y * 0.5f),
+					0x00ff00ff
 				);
+
+					Novice::DrawEllipse(
+						int(fourierPoint_[1].x + windowCenter.x + canvasSize.x * 0.5f),
+						int(fourierPoint_[1].y + windowCenter.y),
+						4,
+						4,
+						0.0f,
+						0x00ff00ff,
+						kFillModeSolid
+					);
+
+					Novice::DrawEllipse(
+						int(fourierPoint_[0].x + windowCenter.x),
+						int(fourierPoint_[0].y + windowCenter.y + canvasSize.y * 0.5f),
+						4,
+						4,
+						0.0f,
+						0x00ff00ff,
+						kFillModeSolid
+					);
+				} else{
+
+					Novice::DrawLine(
+						int(tmpPos2.x + windowCenter.x + canvasSize.x * 0.5f),
+						int(tmpPos2.y + windowCenter.y),
+						int(fourierPoint_[0].x + windowCenter.x),
+						int(fourierPoint_[1].y + windowCenter.y),
+						0xf542efff
+					);
+
+					Novice::DrawLine(
+						int(tmpPos1.x + windowCenter.x),
+						int(tmpPos1.y + windowCenter.y + canvasSize.y * 0.5f),
+						int(fourierPoint_[0].x + windowCenter.x),
+						int(fourierPoint_[1].y + windowCenter.y),
+						0x42a7f5ff
+					);
+
+					Novice::DrawEllipse(
+						int(fourierPoint_[1].x + windowCenter.x + canvasSize.x * 0.5f),
+						int(fourierPoint_[1].y + windowCenter.y),
+						4,
+						4,
+						0.0f,
+						0xf542efff,
+						kFillModeSolid
+					);
+
+					Novice::DrawEllipse(
+						int(fourierPoint_[0].x + windowCenter.x),
+						int(fourierPoint_[0].y + windowCenter.y + canvasSize.y * 0.5f),
+						4,
+						4,
+						0.0f,
+						0x42a7f5ff,
+						kFillModeSolid
+					);
+				}
 			}
 
-			theta += ((2.0f * float(M_PI)) / resultX_.size()) * 0.01f;
+			theta += ((2.0f * float(M_PI)) / resultX_.size()) * 0.025f;
 			if(theta > 2.0f * 3.14f){
 				theta = 0.0f;
 			}
 		}
-
 	}
 
 #ifdef _DEBUG
