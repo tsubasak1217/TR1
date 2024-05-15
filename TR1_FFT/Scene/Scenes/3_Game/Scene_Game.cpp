@@ -101,44 +101,7 @@ void Scene_Game::Update() {
 		}
 	}
 
-	if(isDrawFourier_){
-
-		if(frameCount_ % getFrame_ == 0){
-
-			// 初期化
-			fourierPoint_ = { 0.0f,0.0f };
-
-			for(int i = 0; i < result_.size(); i++){
-
-				// 角度を加算していく
-				//resultX_[i].currentTheta += resultX_[i].theta;
-				//resultY_[i].currentTheta += resultY_[i].theta;
-
-				Vec2 tmpPos = fourierPoint_;
-				float r = result_[i].level;
-
-				Novice::DrawEllipse(
-					int(fourierPoint_.x + windowCenter.x),
-					int(fourierPoint_.y + windowCenter.y),
-					int(r),
-					int(r),
-					0.0f,
-					0x000000ff,
-					kFillModeWireFrame
-				);
-
-				// 座標の決定
-				fourierPoint_.x += r * std::cos(result_[i].phase + (i + 1) * theta);
-				fourierPoint_.y += r * std::sin(result_[i].phase + (i + 1) * theta);
-			}
-		
-			theta += ((2.0f * float(M_PI)) / result_.size()) * 0.01f;
-			if(theta > 2.0f * 3.14f){
-				theta = 0.0f;
-			}
-		}
-
-	}
+	
 }
 
 void Scene_Game::Draw() {
@@ -181,6 +144,63 @@ void Scene_Game::Draw() {
 		);
 	}
 
+	if(isDrawFourier_){
+
+		if(frameCount_ % getFrame_ == 0){
+
+			// 初期化
+			fourierPoint_ = { 0.0f,0.0f };
+
+			for(int i = 0; i < result_.size(); i++){
+
+				// 角度を加算していく
+				//resultX_[i].currentTheta += resultX_[i].theta;
+				//resultY_[i].currentTheta += resultY_[i].theta;
+
+				Vec2 tmpPos = fourierPoint_;
+				float r = result_[i].level;
+
+				Novice::DrawEllipse(
+					int(fourierPoint_.x + windowCenter.x),
+					int(fourierPoint_.y + windowCenter.y),
+					int(r),
+					int(r),
+					0.0f,
+					0x000000ff,
+					kFillModeWireFrame
+				);
+
+				// 座標の決定
+				fourierPoint_.x += r * std::cos(result_[i].phase);
+				fourierPoint_.y += r * std::sin(result_[i].phase);
+
+
+				Novice::DrawLine(
+					int(tmpPos.x + windowCenter.x),
+					int(tmpPos.y + windowCenter.y),
+					int(fourierPoint_.x + windowCenter.x),
+					int(fourierPoint_.y + windowCenter.y),
+					0x000000ff
+				);
+
+				Novice::DrawEllipse(
+					int(fourierPoint_.x + windowCenter.x),
+					int(fourierPoint_.y + windowCenter.y),
+					4,
+					4,
+					0.0f,
+					0x000000ff,
+					kFillModeSolid
+				);
+			}
+
+			theta += ((2.0f * float(M_PI)) / result_.size()) * 0.01f;
+			if(theta > 2.0f * 3.14f){
+				theta = 0.0f;
+			}
+		}
+
+	}
 
 #ifdef _DEBUG
 	Novice::ScreenPrintf(20, 20, "scene: Game");
