@@ -147,20 +147,20 @@ void Scene_Game::Draw() {
 			// 初期化
 			fourierPoint_ = { 0.0f,0.0f };
 
-			for(int i = 0; i < 1/*resultX_.size()*/; i++){
+			for(int i = 0; i < resultX_.size(); i++){
 
 				// 角度を加算していく
 				//resultX_[i].currentTheta += resultX_[i].theta;
 				//resultY_[i].currentTheta += resultY_[i].theta;
 
 				Vec2 tmpPos = fourierPoint_;
-				float r = MyFunc::Length({ resultX_[i].level,resultY_[i].level });
+				//float r = MyFunc::Length({ resultX_[i].level,resultY_[i].level });
 
 				Novice::DrawEllipse(
 					int(fourierPoint_.x + windowCenter.x),
 					int(fourierPoint_.y + windowCenter.y),
-					int(r),
-					int(r),
+					int(resultX_[i].level),
+					int(resultY_[i].level),
 					0.0f,
 					0x000000ff,
 					kFillModeWireFrame
