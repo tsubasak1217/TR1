@@ -130,17 +130,7 @@ void Scene_Game::Draw() {
 
 	if(isDrawFourier_){
 
-		Novice::DrawEllipse(
-			int(windowCenter.x + fourierPoint_[0].x),
-			int(windowCenter.y + fourierPoint_[1].y),
-			20, 20, 0.0f,
-			0x000000ff,
-			kFillModeSolid
-		);
-	}
-
-
-	if(isDrawFourier_){
+		Novice::SetBlendMode(kBlendModeNormal);
 
 		if(frameCount_ % getFrame_ == 0){
 
@@ -173,8 +163,8 @@ void Scene_Game::Draw() {
 					fourierPoint_[1].x + windowCenter.x + canvasSize.x * 0.5f,
 					fourierPoint_[1].y + windowCenter.y),
 					Vec2(
-					resultY_[i].level,
-					resultY_[i].level),
+					resultY_[i].level * 2,
+					resultY_[i].level * 2),
 					0,0,1080,1080,
 					1.0f,1.0f,
 					"ellipseLine",
@@ -238,16 +228,16 @@ void Scene_Game::Draw() {
 				} else{
 
 					Novice::DrawLine(
-						int(tmpPos2.x + windowCenter.x + canvasSize.x * 0.5f),
-						int(tmpPos2.y + windowCenter.y),
+						int(fourierPoint_[1].x + windowCenter.x + canvasSize.x * 0.5f),
+						int(fourierPoint_[1].y + windowCenter.y),
 						int(fourierPoint_[0].x + windowCenter.x),
 						int(fourierPoint_[1].y + windowCenter.y),
 						0xf542efff
 					);
 
 					Novice::DrawLine(
-						int(tmpPos1.x + windowCenter.x),
-						int(tmpPos1.y + windowCenter.y + canvasSize.y * 0.5f),
+						int(fourierPoint_[0].x + windowCenter.x),
+						int(fourierPoint_[0].y + windowCenter.y + canvasSize.y * 0.5f),
 						int(fourierPoint_[0].x + windowCenter.x),
 						int(fourierPoint_[1].y + windowCenter.y),
 						0x42a7f5ff
@@ -274,6 +264,14 @@ void Scene_Game::Draw() {
 					);
 				}
 			}
+
+			Novice::DrawEllipse(
+				int(windowCenter.x + fourierPoint_[0].x),
+				int(windowCenter.y + fourierPoint_[1].y),
+				10, 10, 0.0f,
+				0x000000ff,
+				kFillModeSolid
+			);
 
 			theta += ((2.0f * float(M_PI)) / resultX_.size()) * 0.025f;
 			if(theta > 2.0f * 3.14f){
