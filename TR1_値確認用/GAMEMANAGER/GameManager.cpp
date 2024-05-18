@@ -46,7 +46,7 @@ void GameManager::Run() {
 	Novice::Initialize(kWindowTitle, kWindowSizeX, kWindowSizeY);
 
 	// ゲームマネージャーのインスタンス作成
-	GameManager gameManager(new SceneManager(new Scene_Title));
+	GameManager gameManager(new SceneManager(new Scene_Game));
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {

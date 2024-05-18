@@ -36,7 +36,7 @@ private:
 
 private:
 	std::vector<float> Exponentiation(std::vector<float> data);
-	void Butterfly(std::vector<std::complex<float>>* data, int step);
+	void Butterfly(std::vector<std::complex<float>>* data);
 	std::vector<std::complex<float>> FFT(const std::vector<float>& data);
 	std::vector<std::complex<float>> DFT(const std::vector<float>& data);
 	std::vector<std::complex<float>> IDFT(const std::vector<std::complex<float>>& FFTdata);

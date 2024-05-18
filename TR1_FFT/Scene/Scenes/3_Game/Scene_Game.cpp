@@ -328,7 +328,7 @@ std::vector<float> Scene_Game::Exponentiation(std::vector<float> data) {
 	return data;
 }
 
-void Scene_Game::Butterfly(std::vector<std::complex<float>>* data, int step)
+void Scene_Game::Butterfly(std::vector<std::complex<float>>* data)
 {
 
 	size_t halfStep = data->size() / 2;
@@ -343,11 +343,11 @@ void Scene_Game::Butterfly(std::vector<std::complex<float>>* data, int step)
 
 			newDataEven[i] = (*data)[i] + (*data)[i + halfStep];
 			newDataOdd[i] = ((*data)[i] - (*data)[i + halfStep]);
-			newDataOdd[i] *= std::pow(w, i * step);
+			newDataOdd[i] *= std::pow(w, i);
 		}
 
-		Butterfly(&newDataEven,step * 2);
-		Butterfly(&newDataOdd,step * 2);
+		Butterfly(&newDataEven);
+		Butterfly(&newDataOdd);
 
 		newDataEven.insert(newDataEven.end(), newDataOdd.begin(), newDataOdd.end());
 		*data = newDataEven;
@@ -383,7 +383,7 @@ std::vector<std::complex<float>> Scene_Game::FFT(const std::vector<float>& data)
 	}
 
 	// バタフライ演算をして結果を求める
-	Butterfly(&result,1);
+	Butterfly(&result);
 
 	return result;
 }
