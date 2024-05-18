@@ -5,7 +5,8 @@
 
 void Container::Draw(int getFrame) {
 
-	int size = (int(float(getFrame) / 4.0f) * 3) * 16;
+	int size = 1;
+	getFrame;
 
 	std::vector<Vec2>positions(positionX_.size());
 

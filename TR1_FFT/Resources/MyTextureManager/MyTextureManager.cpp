@@ -12,7 +12,7 @@ void MyTextureManager::Init() {
 	std::string curDir = "./Resources/MyTextureManager/Images/";
 
 	texture_["white1x1"] = Novice::LoadTexture("white1x1.png");
-	texture_["ellipseLine"] = Novice::LoadTexture("ellipseLine.png");
+	texture_["ellipseLine"] = Novice::LoadTexture("./Resources/MyTextureManager/Images/ellipseLine.png");
 }
 
 void MyTextureManager::Fin() {

@@ -9,10 +9,12 @@
 
 
 std::complex<float> a;
-float theta = 0.0f;
+float theta[2] = { 0.0f };
+float t = 0.0f;
 
 Scene_Game::Scene_Game() {
 	Init();
+	MyFunc::Init();
 }
 
 Scene_Game::~Scene_Game() {
@@ -21,7 +23,7 @@ Scene_Game::~Scene_Game() {
 void Scene_Game::Init() {
 	isDraw_ = false;
 	frameCount_ = 0;
-	getFrame_ = 4;
+	getFrame_ = 1;
 	nyquist_ = (60.0f / float(getFrame_)) * 0.5f;// 最大周波数
 	container_.clear();
 	container_.push_back(Container());
@@ -30,14 +32,18 @@ void Scene_Game::Init() {
 void Scene_Game::Update() {
 	if(InputKey::trigger[DIK_RETURN]) {
 		//SceneManager::SetScene(new Scene_Clear());
+	}
 
+	if(InputKey::mouseTrigger_[1]) {
 		// データをFFTする
 		FFTX_ = FFT(container_.back().positionX_);
 		FFTY_ = FFT(container_.back().positionY_);
+		DFTX_ = DFT(container_.back().positionX_);
+		IFFTX_ = IDFT(FFTX_);
 
 		// データを解析する
-		resultX_ = TransformFFT(FFTX_, nyquist_,true);
-		resultY_ = TransformFFT(FFTY_, nyquist_,false);
+		resultX_ = TransformFFT(FFTX_, nyquist_, true);
+		resultY_ = TransformFFT(FFTY_, nyquist_, false);
 
 		// コンテナにコピー
 		container_.back().resultX_ = resultX_;
@@ -68,7 +74,8 @@ void Scene_Game::Update() {
 
 				isDrawFourier_ = false;
 				container_.back().isDrawFourier_ = false;
-				theta = 0.0f;
+				theta[0] = 0.0f;
+				theta[1] = 0.0f;
 			}
 		}
 	}
@@ -96,14 +103,21 @@ void Scene_Game::Update() {
 		}
 	}
 
-	
+	if(isDrawFourier_){
+		if(frameCount_ % (getFrame_ * 2) == 0){
+			t++;
+			t > FFTX_.size() ? t = 0.0f : t;
+		}
+	} else{
+		t = 0.0f;
+	}
 }
 
 void Scene_Game::Draw() {
 
 	MyFunc::DrawQuad(
 		windowCenter,
-		{ (float)kWindowSizeX ,(float)kWindowSizeY},
+		{ (float)kWindowSizeX ,(float)kWindowSizeY },
 		0, 0,
 		1, 1,
 		1.0f, 1.0f,
@@ -130,81 +144,82 @@ void Scene_Game::Draw() {
 
 	if(isDrawFourier_){
 
-		Novice::SetBlendMode(kBlendModeNormal);
 
 		if(frameCount_ % getFrame_ == 0){
 
 			// 初期化
-			fourierPoint_[0] = {0.0f,0.0f};
+			fourierPoint_[0] = { 0.0f,0.0f };
 			fourierPoint_[1] = { 0.0f,0.0f };
+
+			std::complex<float>fourierPos[2];
+			fourierPos[0] = { 0.0f,0.0f };
+			fourierPos[1] = { 0.0f,0.0f };
 
 			for(int i = 0; i < resultX_.size(); i++){
 
-				// 角度を加算していく
-				//resultX_[i].currentTheta += resultX_[i].theta;
-				//resultY_[i].currentTheta += resultY_[i].theta;
+				theta[0] = (float(2.0 * M_PI) * i * t) / float(FFTX_.size());
+				theta[1] = (float(2.0 * M_PI) * i * t) / float(FFTY_.size());
 
 				Vec2 tmpPos1 = fourierPoint_[0];
 				Vec2 tmpPos2 = fourierPoint_[1];
-				//float r = MyFunc::Length({ resultX_[i].level,resultY_[i].level });
-
-				/*Novice::DrawEllipse(
-					int(fourierPoint_[1].x + windowCenter.x + canvasSize.x * 0.5f),
-					int(fourierPoint_[1].y + windowCenter.y),
-					int(resultY_[i].level),
-					int(resultY_[i].level),
-					0.0f,
-					0x00ff00ff,
-					kFillModeWireFrame
-				);*/
 
 				MyFunc::DrawQuad(
 					Vec2(
-					fourierPoint_[1].x + windowCenter.x + canvasSize.x * 0.5f,
-					fourierPoint_[1].y + windowCenter.y),
+						fourierPoint_[1].x + windowCenter.x + canvasSize.x * 0.5f,
+						fourierPoint_[1].y + windowCenter.y),
 					Vec2(
-					resultY_[i].level * 2,
-					resultY_[i].level * 2),
-					0,0,1080,1080,
-					1.0f,1.0f,
+						resultY_[i].level * 2,
+						resultY_[i].level * 2),
+					0, 0, 128, 128,
+					1.0f, 1.0f,
 					"ellipseLine",
 					0.0f,
 					0x00ff00ff
 				);
 
-				Novice::DrawEllipse(
-					int(fourierPoint_[0].x + windowCenter.x),
-					int(fourierPoint_[0].y + windowCenter.y + canvasSize.y * 0.5f),
-					int(resultX_[i].level),
-					int(resultX_[i].level),
+				MyFunc::DrawQuad(
+					Vec2(
+						fourierPoint_[0].x + windowCenter.x,
+						fourierPoint_[0].y + windowCenter.y + canvasSize.y * 0.5f),
+					Vec2(
+						resultX_[i].level * 2,
+						resultX_[i].level * 2),
+					0, 0, 128, 128,
+					1.0f, 1.0f,
+					"ellipseLine",
 					0.0f,
-					0x00ff00ff,
-					kFillModeWireFrame
+					0x00ff00ff
 				);
 
 				// 座標の決定
-				fourierPoint_[0].x += resultX_[i].level * std::cos(resultX_[i].phase + (i + 1) * theta);
-				fourierPoint_[0].y += resultX_[i].level * std::sin(resultX_[i].phase + (i + 1) * theta);
+				fourierPos[0] += (FFTX_[i] / float(FFTX_.size())) * std::polar(1.0f, theta[0]);
+				fourierPos[1] += (FFTY_[i] / float(FFTY_.size())) * std::polar(1.0f,theta[1]);
 
-				fourierPoint_[1].x += resultY_[i].level * std::cos(resultY_[i].phase + (i + 1) * theta);
-				fourierPoint_[1].y += resultY_[i].level * std::sin(resultY_[i].phase + (i + 1) * theta);
+				fourierPoint_[0].x += resultX_[i].level * std::cos(theta[0]);
+				fourierPoint_[0].y += resultX_[i].level * std::sin(theta[0]);
+
+				fourierPoint_[1].x += resultY_[i].level * std::cos(theta[1]);
+				fourierPoint_[1].y += resultY_[i].level * std::sin(theta[1]);
+
+				fourierPoint_[0] = { fourierPos[0].real(),fourierPos[0].imag() };
+				fourierPoint_[1] = { fourierPos[1].imag(),fourierPos[1].real() };
+
 				if(i != resultX_.size() - 1){
+					Novice::DrawLine(
+						int(tmpPos2.x + windowCenter.x + canvasSize.x * 0.5f),
+						int(tmpPos2.y + windowCenter.y),
+						int(fourierPoint_[1].x + windowCenter.x + canvasSize.x * 0.5f),
+						int(fourierPoint_[1].y + windowCenter.y),
+						0x00ff00ff
+					);
 
-				Novice::DrawLine(
-					int(tmpPos2.x + windowCenter.x + canvasSize.x * 0.5f),
-					int(tmpPos2.y + windowCenter.y),
-					int(fourierPoint_[1].x + windowCenter.x + canvasSize.x * 0.5f),
-					int(fourierPoint_[1].y + windowCenter.y),
-					0x00ff00ff
-				);
-
-				Novice::DrawLine(
-					int(tmpPos1.x + windowCenter.x),
-					int(tmpPos1.y + windowCenter.y + canvasSize.y * 0.5f),
-					int(fourierPoint_[0].x + windowCenter.x),
-					int(fourierPoint_[0].y + windowCenter.y + canvasSize.y * 0.5f),
-					0x00ff00ff
-				);
+					Novice::DrawLine(
+						int(tmpPos1.x + windowCenter.x),
+						int(tmpPos1.y + windowCenter.y + canvasSize.y * 0.5f),
+						int(fourierPoint_[0].x + windowCenter.x),
+						int(fourierPoint_[0].y + windowCenter.y + canvasSize.y * 0.5f),
+						0x00ff00ff
+					);
 
 					Novice::DrawEllipse(
 						int(fourierPoint_[1].x + windowCenter.x + canvasSize.x * 0.5f),
@@ -273,9 +288,11 @@ void Scene_Game::Draw() {
 				kFillModeSolid
 			);
 
-			theta += ((2.0f * float(M_PI)) / resultX_.size()) * 0.025f;
-			if(theta > 2.0f * 3.14f){
-				theta = 0.0f;
+			for(int i = 0; i < container_[0].positionX_.size(); i++){
+				Novice::ScreenPrintf(180 + 100 * i, 0, "[%.2f], ", FFTX_[i].real());
+				Novice::ScreenPrintf(180 + 100 * i, 20, "[%.2f], ", FFTX_[i].imag());
+				Novice::ScreenPrintf(180 + 100 * i, 40, "[%.2f], ", DFTX_[i].real());
+				Novice::ScreenPrintf(180 + 100 * i, 60, "[%.2f], ", DFTX_[i].imag());
 			}
 		}
 	}
@@ -311,7 +328,7 @@ std::vector<float> Scene_Game::Exponentiation(std::vector<float> data) {
 	return data;
 }
 
-void Scene_Game::Butterfly(std::vector<std::complex<float>>* data)
+void Scene_Game::Butterfly(std::vector<std::complex<float>>* data, int step)
 {
 
 	size_t halfStep = data->size() / 2;
@@ -320,19 +337,19 @@ void Scene_Game::Butterfly(std::vector<std::complex<float>>* data)
 
 		std::vector<std::complex<float>> newDataEven(halfStep);
 		std::vector<std::complex<float>> newDataOdd(halfStep);
-		std::complex<float> w = std::polar(1.0f, float(-2.0 * M_PI) / data->size());
+		std::complex<float> w = std::polar(1.0f, float(-2.0 * M_PI) / float(data->size()));
 
 		for(size_t i = 0; i < halfStep; i++){
 
 			newDataEven[i] = (*data)[i] + (*data)[i + halfStep];
 			newDataOdd[i] = ((*data)[i] - (*data)[i + halfStep]);
-			newDataOdd[i] *= std::pow(w, i);
+			newDataOdd[i] *= std::pow(w, i * step);
 		}
 
-		Butterfly(&newDataEven);
-		Butterfly(&newDataOdd);
+		Butterfly(&newDataEven,step * 2);
+		Butterfly(&newDataOdd,step * 2);
 
-		newDataEven.insert(newDataEven.end(),newDataOdd.begin(), newDataOdd.end());
+		newDataEven.insert(newDataEven.end(), newDataOdd.begin(), newDataOdd.end());
 		*data = newDataEven;
 	}
 }
@@ -366,31 +383,88 @@ std::vector<std::complex<float>> Scene_Game::FFT(const std::vector<float>& data)
 	}
 
 	// バタフライ演算をして結果を求める
-	Butterfly(&result);
+	Butterfly(&result,1);
+
+	return result;
+}
+
+std::vector<std::complex<float>> Scene_Game::DFT(const std::vector<float>& data)
+{
+	float PI2 = float(2.0 * M_PI);
+	int indexSize = int(data.size());
+
+	std::complex<float>imaginary(0, 1);
+	std::vector<std::complex<float>> tmp(indexSize, std::complex<float>(0.0f, 0.0f));
+	std::vector<std::complex<float>> result(indexSize, std::complex<float>(0.0f, 0.0f));
+
+	for(int i = 0; i < indexSize; i++){
+		tmp[i].real(data[i]);
+	}
+
+	for(int i = 0; i < indexSize; i++){
+		for(int j = 0; j < indexSize; j++){
+			float angle = (PI2 * i * j) / float(indexSize);
+			result[i] += tmp[j] * std::exp(-imaginary * angle);
+		}
+	}
+
+	return result;
+}
+
+std::vector<std::complex<float>> Scene_Game::IDFT(const std::vector<std::complex<float>>& FFTdata)
+{
+	float PI2 = float(2.0 * M_PI);
+	int indexSize = int(FFTdata.size());
+	std::vector<std::complex<float>> result(indexSize, std::complex<float>(0.0f, 0.0f));
+
+	for(int i = 0; i < indexSize; i++){
+		for(int j = 0; j < indexSize; j++){
+			float angle = (PI2 * i * j) / float(indexSize);
+			result[i] += FFTdata[j] * std::polar(1.0f, angle);
+		}
+		result[i] /= float(indexSize);
+	}
+
+	return result;
+}
+
+std::complex<float> Scene_Game::IDFT(const std::vector<std::complex<float>>& FFTdata, float time)
+{
+	time = std::clamp(time, 0.0f, float(FFTdata.size() - 1));
+	float PI2 = float(2.0 * M_PI);
+	int indexSize = int(FFTdata.size());
+	std::complex<float> result(0,0);
+
+	for(int j = 0; j < indexSize; j++){
+		float angle = (PI2 * time * j) / float(indexSize);
+		result += FFTdata[j] * std::polar(1.0f, angle);
+	}
+	result /= float(indexSize);
 
 	return result;
 }
 
 // FFTデータを振幅、位相、周波数の要素に分けて格納する
-std::vector<FFTResult> Scene_Game::TransformFFT(const std::vector<std::complex<float>>& data, float nyquist,bool XorY)
+std::vector<FFTResult> Scene_Game::TransformFFT(const std::vector<std::complex<float>>& data, float nyquist, bool XorY)
 {
 	// データ1刻みごとの周波数の変化(ラジアンに変換する)を計算
 	float thetaEvery = (nyquist / float(data.size())) * (2.0f * float(M_PI));
+	thetaEvery;
 
 	// 結果を格納する変数
 	std::vector<FFTResult> result(data.size());
-	
+
 	for(int i = 0; i < result.size(); i++){
 		Vec2 vec = { data[i].real(),data[i].imag() };// 複素数からベクトルに変換
 
-		result[i].level = MyFunc::Length(vec)/ result.size();// 絶対値が振幅の大きさ
+		result[i].level = MyFunc::Length(vec) / result.size();// 絶対値が振幅の大きさ
 		if(XorY == true){
 			result[i].phase = std::atan2(vec.y, vec.x);// 位相
 		} else{
-			result[i].phase = std::atan2(vec.x, vec.y);// 位相
+			result[i].phase = std::atan2(vec.y, vec.x);// 位相
 		}
-		result[i].theta = thetaEvery * i;// 周波数(sin関数で扱う際のラジアン)
-		result[i].currentTheta = result[i].phase;
+		result[i].theta = (float(M_PI * 2.0) * i) / data.size();
+		result[i].currentTheta = 0.0f;
 	}
 
 	return result;

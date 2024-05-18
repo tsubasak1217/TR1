@@ -29,8 +29,8 @@ public:
 
 	MyFunc();
 	~MyFunc();
-	void Init();
-	void Fin();
+	static void Init();
+	static void Fin();
 
 	//何もしない関数
 	void Void();
