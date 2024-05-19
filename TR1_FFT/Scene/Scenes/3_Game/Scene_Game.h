@@ -25,6 +25,7 @@ private:
 	std::vector<Container> container_;
 	std::vector<std::complex<float>> FFTX_;
 	std::vector<std::complex<float>> FFTY_;
+	std::vector<std::complex<float>> IDFTX_;
 	std::vector<std::complex<float>> IFFTX_;
 	std::vector<std::complex<float>> DFTX_;
 	std::vector<FFTResult> resultX_;
@@ -36,12 +37,13 @@ private:
 
 private:
 	std::vector<float> Exponentiation(std::vector<float> data);
-	void Butterfly(std::vector<std::complex<float>>* data);
+	void Butterfly(std::vector<std::complex<float>>* data,bool inverse);
 	std::vector<std::complex<float>> FFT(const std::vector<float>& data);
 	std::vector<std::complex<float>> DFT(const std::vector<float>& data);
 	std::vector<std::complex<float>> IDFT(const std::vector<std::complex<float>>& FFTdata);
 	std::complex<float> IDFT(const std::vector<std::complex<float>>& FFTdata,float time);
+	std::vector<std::complex<float>> IFFT(const std::vector<std::complex<float>>& FFTdata);
 
-	std::vector<FFTResult> TransformFFT(const std::vector<std::complex<float>>& data,float nyquist,bool XorY);
+	std::vector<FFTResult> TransformFFT(const std::vector<std::complex<float>>& data);
 	std::vector<FFTResult> SortFFT(const std::vector<FFTResult>& data);
 };

@@ -9,6 +9,7 @@
 #include <sstream>
 #include <vector>
 #include <complex>
+#include <cmath>
 #include <algorithm>
 #include "Easing.h"
 #include "VectorN.h"

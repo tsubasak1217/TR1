@@ -36,14 +36,15 @@ void Scene_Game::Update() {
 
 	if(InputKey::mouseTrigger_[1]) {
 		// データをFFTする
-		FFTX_ = FFT(container_.back().positionX_);
-		FFTY_ = FFT(container_.back().positionY_);
+		FFTX_ = DFT(container_.back().positionX_);
+		FFTY_ = DFT(container_.back().positionY_);
 		DFTX_ = DFT(container_.back().positionX_);
-		IFFTX_ = IDFT(FFTX_);
+		//IFFTX_ = IFFT(FFTX_);
+		IDFTX_ = IDFT(FFTX_);
 
 		// データを解析する
-		resultX_ = TransformFFT(FFTX_, nyquist_, true);
-		resultY_ = TransformFFT(FFTY_, nyquist_, false);
+		resultX_ = TransformFFT(FFTX_);
+		resultY_ = TransformFFT(FFTY_);
 
 		// コンテナにコピー
 		container_.back().resultX_ = resultX_;
@@ -51,8 +52,8 @@ void Scene_Game::Update() {
 		container_.back().isDrawFourier_ = true;
 
 		// データをソートする
-		//resultX_ = SortFFT(resultX_);
-		//resultY_ = SortFFT(resultY_);
+		resultX_ = SortFFT(resultX_);
+		resultY_ = SortFFT(resultY_);
 
 		// 振幅の最大値を渡す
 		if(resultX_[0].level > resultY_[0].level){
@@ -193,13 +194,7 @@ void Scene_Game::Draw() {
 
 				// 座標の決定
 				fourierPos[0] += (FFTX_[i] / float(FFTX_.size())) * std::polar(1.0f, theta[0]);
-				fourierPos[1] += (FFTY_[i] / float(FFTY_.size())) * std::polar(1.0f,theta[1]);
-
-				fourierPoint_[0].x += resultX_[i].level * std::cos(theta[0]);
-				fourierPoint_[0].y += resultX_[i].level * std::sin(theta[0]);
-
-				fourierPoint_[1].x += resultY_[i].level * std::cos(theta[1]);
-				fourierPoint_[1].y += resultY_[i].level * std::sin(theta[1]);
+				fourierPos[1] += (FFTY_[i] / float(FFTY_.size())) * std::polar(1.0f, theta[1]);
 
 				fourierPoint_[0] = { fourierPos[0].real(),fourierPos[0].imag() };
 				fourierPoint_[1] = { fourierPos[1].imag(),fourierPos[1].real() };
@@ -288,11 +283,11 @@ void Scene_Game::Draw() {
 				kFillModeSolid
 			);
 
-			for(int i = 0; i < container_[0].positionX_.size(); i++){
-				Novice::ScreenPrintf(180 + 100 * i, 0, "[%.2f], ", FFTX_[i].real());
-				Novice::ScreenPrintf(180 + 100 * i, 20, "[%.2f], ", FFTX_[i].imag());
-				Novice::ScreenPrintf(180 + 100 * i, 40, "[%.2f], ", DFTX_[i].real());
-				Novice::ScreenPrintf(180 + 100 * i, 60, "[%.2f], ", DFTX_[i].imag());
+			for(int i = 0; i < container_[0].positionX_.size() - 1; i++){
+				/*Novice::ScreenPrintf(180 + 100 * i, 0, "[%.2f], ", container_[0].positionX_[i]);
+				Novice::ScreenPrintf(180 + 100 * i, 20, "[%.2f], ", FFTX_[i].real());
+				Novice::ScreenPrintf(180 + 100 * i, 40, "[%.2f], ", FFTX_[i].imag());
+				Novice::ScreenPrintf(180 + 100 * i, 60, "[%.2f], ", IFFTX_[i].real());*/
 			}
 		}
 	}
@@ -328,37 +323,47 @@ std::vector<float> Scene_Game::Exponentiation(std::vector<float> data) {
 	return data;
 }
 
-void Scene_Game::Butterfly(std::vector<std::complex<float>>* data)
+void Scene_Game::Butterfly(std::vector<std::complex<float>>* data, bool inverse)
 {
-
+	// 要素の半分の数を求める
 	size_t halfStep = data->size() / 2;
 
-	if(halfStep >= 1){
+	// 要素数が1のときはこれ以上半分にできないため、処理されない
+	if(halfStep < 1){ return; }
 
-		std::vector<std::complex<float>> newDataEven(halfStep);
-		std::vector<std::complex<float>> newDataOdd(halfStep);
-		std::complex<float> w = std::polar(1.0f, float(-2.0 * M_PI) / float(data->size()));
+	// 要素を前半と後半に分けて再帰処理するため、変数を用意
+	std::vector<std::complex<float>> newDataFiestHalf(halfStep);
+	std::vector<std::complex<float>> newDataSecondHalf(halfStep);
 
-		for(size_t i = 0; i < halfStep; i++){
+	// 逆変換の際には反対周りになるようにする
+	std::complex<float> w = std::polar(1.0f, float(-2.0 * M_PI * (inverse ? -1.0 : 1.0)) / float(data->size()));
 
-			newDataEven[i] = (*data)[i] + (*data)[i + halfStep];
-			newDataOdd[i] = ((*data)[i] - (*data)[i + halfStep]);
-			newDataOdd[i] *= std::pow(w, i);
-		}
-
-		Butterfly(&newDataEven);
-		Butterfly(&newDataOdd);
-
-		newDataEven.insert(newDataEven.end(), newDataOdd.begin(), newDataOdd.end());
-		*data = newDataEven;
+	for(size_t i = 0; i < halfStep; i++){
+		// バタフライ演算の本体
+		newDataFiestHalf[i] = (*data)[i] + (*data)[i + halfStep];
+		newDataSecondHalf[i] = ((*data)[i] - (*data)[i + halfStep]);
+		newDataSecondHalf[i] *= std::pow(w, i);
 	}
+
+	// 前半と後半に分けて再帰処理
+	Butterfly(&newDataFiestHalf, inverse);
+	Butterfly(&newDataSecondHalf, inverse);
+
+	// 返ってきた結果を結合して引数のポインタの値を更新
+	newDataFiestHalf.insert(newDataFiestHalf.end(), newDataSecondHalf.begin(), newDataSecondHalf.end());
+	*data = newDataFiestHalf;
 }
 
 std::vector<std::complex<float>> Scene_Game::FFT(const std::vector<float>& data)
 {
 	// データ数を2の累乗にする
 	std::vector<float>exData = Exponentiation(data);
+	std::vector<std::complex<float>>tmp(exData.size(), 0);
 	std::vector<std::complex<float>>result(exData.size(), 0);
+	for(int i = 0; i < exData.size(); i++){ tmp[i].real(exData[i]); }
+
+	// バタフライ演算をして結果を求める
+	Butterfly(&tmp, false);
 
 	// 要素を表すのに必要な最低のビット数を求める
 	int bitMax = 1;
@@ -379,11 +384,8 @@ std::vector<std::complex<float>> Scene_Game::FFT(const std::vector<float>& data)
 		}
 
 		// 反転して求めた要素を複素数ベクトルの実部に代入
-		result[i].real(exData[reserved]);
+		result[i] = tmp[reserved];
 	}
-
-	// バタフライ演算をして結果を求める
-	Butterfly(&result);
 
 	return result;
 }
@@ -393,18 +395,22 @@ std::vector<std::complex<float>> Scene_Game::DFT(const std::vector<float>& data)
 	float PI2 = float(2.0 * M_PI);
 	int indexSize = int(data.size());
 
-	std::complex<float>imaginary(0, 1);
 	std::vector<std::complex<float>> tmp(indexSize, std::complex<float>(0.0f, 0.0f));
 	std::vector<std::complex<float>> result(indexSize, std::complex<float>(0.0f, 0.0f));
+	std::complex<float>imaginary(0, 1);
 
 	for(int i = 0; i < indexSize; i++){
+		// 複素数として計算するため、floatのデータを複素数型complexの実部にコピー。虚部は0。
 		tmp[i].real(data[i]);
 	}
 
-	for(int i = 0; i < indexSize; i++){
-		for(int j = 0; j < indexSize; j++){
-			float angle = (PI2 * i * j) / float(indexSize);
-			result[i] += tmp[j] * std::exp(-imaginary * angle);
+	for(int i = 0; i < indexSize; i++){// いまどのデータをフーリエ変換しているか。公式でいう"t"。
+
+		for(int j = 0; j < indexSize; j++){// ここからフーリエ変換の本体
+
+			float angle = (PI2 * i * j) / float(indexSize);// 2πtx/Nの部分
+			result[i] += tmp[j] * std::exp(-imaginary * angle);// f(x) * e を計算 (std::exp()が"e"を作成してくれる関数)
+
 		}
 	}
 
@@ -418,11 +424,13 @@ std::vector<std::complex<float>> Scene_Game::IDFT(const std::vector<std::complex
 	std::vector<std::complex<float>> result(indexSize, std::complex<float>(0.0f, 0.0f));
 
 	for(int i = 0; i < indexSize; i++){
+
 		for(int j = 0; j < indexSize; j++){
 			float angle = (PI2 * i * j) / float(indexSize);
 			result[i] += FFTdata[j] * std::polar(1.0f, angle);
 		}
-		result[i] /= float(indexSize);
+
+		result[i] /= float(indexSize);// 要素数で割って正規化する
 	}
 
 	return result;
@@ -433,7 +441,7 @@ std::complex<float> Scene_Game::IDFT(const std::vector<std::complex<float>>& FFT
 	time = std::clamp(time, 0.0f, float(FFTdata.size() - 1));
 	float PI2 = float(2.0 * M_PI);
 	int indexSize = int(FFTdata.size());
-	std::complex<float> result(0,0);
+	std::complex<float> result(0, 0);
 
 	for(int j = 0; j < indexSize; j++){
 		float angle = (PI2 * time * j) / float(indexSize);
@@ -444,13 +452,48 @@ std::complex<float> Scene_Game::IDFT(const std::vector<std::complex<float>>& FFT
 	return result;
 }
 
-// FFTデータを振幅、位相、周波数の要素に分けて格納する
-std::vector<FFTResult> Scene_Game::TransformFFT(const std::vector<std::complex<float>>& data, float nyquist, bool XorY)
+std::vector<std::complex<float>> Scene_Game::IFFT(const std::vector<std::complex<float>>& FFTdata)
 {
-	// データ1刻みごとの周波数の変化(ラジアンに変換する)を計算
-	float thetaEvery = (nyquist / float(data.size())) * (2.0f * float(M_PI));
-	thetaEvery;
+	std::vector<std::complex<float>>tmp(FFTdata.size(), 0);
+	std::vector<std::complex<float>>result(FFTdata.size(), 0);
+	for(int i = 0; i < FFTdata.size(); i++){ tmp[i] = FFTdata[i]; }
 
+	// バタフライ演算をして結果を求める
+	Butterfly(&tmp, true);
+
+	// サイズで割る
+	for(int i = 0; i < tmp.size(); i++){
+		tmp[i] /= float(tmp.size());
+	}
+
+	// 要素を表すのに必要な最低のビット数を求める
+	int bitMax = 1;
+	for(int i = 2; i < FFTdata.size(); i *= 2){ bitMax++; }
+
+	// ビットの左右反転と要素の入れ替え
+	for(int i = 0; i < FFTdata.size(); i++){
+
+		uint32_t indexNum = i;
+		uint32_t reserved = 0;
+
+		for(int j = 0; j < bitMax; j++){
+			reserved |= indexNum & 0x1;
+			if(j != bitMax - 1){
+				indexNum >>= 1;
+				reserved <<= 1;
+			}
+		}
+
+		// 反転して求めた要素を複素数ベクトルの実部に代入
+		result[i] = tmp[reserved];
+	}
+
+	return result;
+}
+
+// FFTデータを振幅、位相、周波数の要素に分けて格納する
+std::vector<FFTResult> Scene_Game::TransformFFT(const std::vector<std::complex<float>>& data)
+{
 	// 結果を格納する変数
 	std::vector<FFTResult> result(data.size());
 
@@ -458,13 +501,9 @@ std::vector<FFTResult> Scene_Game::TransformFFT(const std::vector<std::complex<f
 		Vec2 vec = { data[i].real(),data[i].imag() };// 複素数からベクトルに変換
 
 		result[i].level = MyFunc::Length(vec) / result.size();// 絶対値が振幅の大きさ
-		if(XorY == true){
-			result[i].phase = std::atan2(vec.y, vec.x);// 位相
-		} else{
-			result[i].phase = std::atan2(vec.y, vec.x);// 位相
-		}
+		result[i].phase = std::atan2(vec.y, vec.x);// 位相
 		result[i].theta = (float(M_PI * 2.0) * i) / data.size();
-		result[i].currentTheta = 0.0f;
+		result[i].index = i;
 	}
 
 	return result;
