@@ -22,9 +22,9 @@ Scene_Game::~Scene_Game() {
 
 void Scene_Game::Init() {
 	isDraw_ = false;
+	drawCount_ = 0;
 	frameCount_ = 0;
 	getFrame_ = 1;
-	nyquist_ = (60.0f / float(getFrame_)) * 0.5f;// 最大周波数
 	container_.clear();
 	container_.push_back(Container());
 }
@@ -36,30 +36,13 @@ void Scene_Game::Update() {
 
 	if(InputKey::mouseTrigger_[1]) {
 		// データをFFTする
-		FFTX_ = DFT(container_.back().positionX_);
-		FFTY_ = DFT(container_.back().positionY_);
-		DFTX_ = DFT(container_.back().positionX_);
-		//IFFTX_ = IFFT(FFTX_);
-		IDFTX_ = IDFT(FFTX_);
-
-		// データを解析する
-		resultX_ = TransformFFT(FFTX_);
-		resultY_ = TransformFFT(FFTY_);
-
-		// コンテナにコピー
-		container_.back().resultX_ = resultX_;
-		container_.back().resultY_ = resultY_;
-		container_.back().isDrawFourier_ = true;
-
-		// データをソートする
-		resultX_ = SortFFT(resultX_);
-		resultY_ = SortFFT(resultY_);
-
-		// 振幅の最大値を渡す
-		if(resultX_[0].level > resultY_[0].level){
-			container_.back().maxLevel_ = resultX_[0].level;
-		} else{
-			container_.back().maxLevel_ = resultY_[0].level;
+		for(int i = 0; i < 2; i++){
+			if(container_.back().pos_[i].size() > 1){
+				FFT_[i] = FFT(container_.back().pos_[i]);
+				DFT_[i] = DFT(container_.back().pos_[i]);
+				IFFT_[i] = IFFT(FFT_[i]);
+				IDFT_[i] = IDFT(DFT_[i]);
+			}
 		}
 
 		isDrawFourier_ = true;
@@ -69,12 +52,24 @@ void Scene_Game::Update() {
 	if(InputKey::mousePos_.x >= windowLT.x && InputKey::mousePos_.x <= windowRB.x) {
 		if(InputKey::mousePos_.y >= windowLT.y && InputKey::mousePos_.y <= windowRB.y) {
 			if(InputKey::mouseTrigger_[0]) {
+
 				isDraw_ = true;
+
 				container_.back().positionX_.clear();
 				container_.back().positionY_.clear();
 
+				if(drawCount_ > 1){
+					drawCount_ = 0;
+				}
+				
+				if(drawCount_ == 0){
+					container_.back().pos_[0].clear();
+				} else if(drawCount_ == 1){
+					container_.back().pos_[1].clear();
+				} 
+				
+
 				isDrawFourier_ = false;
-				container_.back().isDrawFourier_ = false;
 				theta[0] = 0.0f;
 				theta[1] = 0.0f;
 			}
@@ -88,26 +83,31 @@ void Scene_Game::Update() {
 
 		// マウスが離されたら描画終了
 		if(InputKey::mouseRelease_[0]) {
-			isDraw_ = false;
-			frameCount_ = 0;
+
+			drawCount_++;
+
+			if(drawCount_ >= 2){
+				isDraw_ = false;
+				frameCount_ = 0;
+			}
 		}
 
 		// getFrameのフレームごとに座標を取得してコンテナに入れる
-		if(frameCount_ % getFrame_ == 0) {
-			container_.back().positionX_.push_back(
-				float(InputKey::mousePos_.x) - windowCenter.x
-			);
-
-			container_.back().positionY_.push_back(
-				float(InputKey::mousePos_.y) - windowCenter.y
-			);
+		if(InputKey::mousePress_[0]){
+			if(frameCount_ % getFrame_ == 0) {
+				container_.back().pos_[0 + drawCount_].push_back({
+					float(InputKey::mousePos_.x) - windowCenter.x,
+					float(InputKey::mousePos_.y) - windowCenter.y,
+					}
+				);
+			}
 		}
 	}
 
 	if(isDrawFourier_){
 		if(frameCount_ % (getFrame_ * 2) == 0){
 			t++;
-			t > FFTX_.size() ? t = 0.0f : t;
+			t > FFT_[0].size() ? t = 0.0f : t;
 		}
 	} else{
 		t = 0.0f;
@@ -156,139 +156,30 @@ void Scene_Game::Draw() {
 			fourierPos[0] = { 0.0f,0.0f };
 			fourierPos[1] = { 0.0f,0.0f };
 
-			for(int i = 0; i < resultX_.size(); i++){
+			for(int n = 0; n < 2; n++){
+				for(int i = 0; i < FFT_[n].size(); i++){
 
-				theta[0] = (float(2.0 * M_PI) * i * t) / float(FFTX_.size());
-				theta[1] = (float(2.0 * M_PI) * i * t) / float(FFTY_.size());
+					theta[0] = (float(2.0 * M_PI) * i * t) / float(FFT_[0].size());
+					theta[1] = (float(2.0 * M_PI) * i * t) / float(FFT_[1].size());
 
-				Vec2 tmpPos1 = fourierPoint_[0];
-				Vec2 tmpPos2 = fourierPoint_[1];
+					// 座標の決定
+					fourierPos[0] += (FFT_[0][i] / float(FFT_[0].size())) * std::polar(1.0f, theta[0]);
+					fourierPos[1] += (FFT_[1][i] / float(FFT_[1].size())) * std::polar(1.0f, theta[1]);
 
-				MyFunc::DrawQuad(
-					Vec2(
-						fourierPoint_[1].x + windowCenter.x + canvasSize.x * 0.5f,
-						fourierPoint_[1].y + windowCenter.y),
-					Vec2(
-						resultY_[i].level * 2,
-						resultY_[i].level * 2),
-					0, 0, 128, 128,
-					1.0f, 1.0f,
-					"ellipseLine",
-					0.0f,
-					0x00ff00ff
-				);
+					fourierPoint_[0] = { fourierPos[0].real(),fourierPos[0].imag() };
+					fourierPoint_[1] = { fourierPos[1].imag(),fourierPos[1].real() };
 
-				MyFunc::DrawQuad(
-					Vec2(
-						fourierPoint_[0].x + windowCenter.x,
-						fourierPoint_[0].y + windowCenter.y + canvasSize.y * 0.5f),
-					Vec2(
-						resultX_[i].level * 2,
-						resultX_[i].level * 2),
-					0, 0, 128, 128,
-					1.0f, 1.0f,
-					"ellipseLine",
-					0.0f,
-					0x00ff00ff
-				);
-
-				// 座標の決定
-				fourierPos[0] += (FFTX_[i] / float(FFTX_.size())) * std::polar(1.0f, theta[0]);
-				fourierPos[1] += (FFTY_[i] / float(FFTY_.size())) * std::polar(1.0f, theta[1]);
-
-				fourierPoint_[0] = { fourierPos[0].real(),fourierPos[0].imag() };
-				fourierPoint_[1] = { fourierPos[1].imag(),fourierPos[1].real() };
-
-				if(i != resultX_.size() - 1){
-					Novice::DrawLine(
-						int(tmpPos2.x + windowCenter.x + canvasSize.x * 0.5f),
-						int(tmpPos2.y + windowCenter.y),
-						int(fourierPoint_[1].x + windowCenter.x + canvasSize.x * 0.5f),
-						int(fourierPoint_[1].y + windowCenter.y),
-						0x00ff00ff
-					);
-
-					Novice::DrawLine(
-						int(tmpPos1.x + windowCenter.x),
-						int(tmpPos1.y + windowCenter.y + canvasSize.y * 0.5f),
-						int(fourierPoint_[0].x + windowCenter.x),
-						int(fourierPoint_[0].y + windowCenter.y + canvasSize.y * 0.5f),
-						0x00ff00ff
-					);
-
-					Novice::DrawEllipse(
-						int(fourierPoint_[1].x + windowCenter.x + canvasSize.x * 0.5f),
-						int(fourierPoint_[1].y + windowCenter.y),
-						4,
-						4,
-						0.0f,
-						0x00ff00ff,
-						kFillModeSolid
-					);
-
-					Novice::DrawEllipse(
-						int(fourierPoint_[0].x + windowCenter.x),
-						int(fourierPoint_[0].y + windowCenter.y + canvasSize.y * 0.5f),
-						4,
-						4,
-						0.0f,
-						0x00ff00ff,
-						kFillModeSolid
-					);
-				} else{
-
-					Novice::DrawLine(
-						int(fourierPoint_[1].x + windowCenter.x + canvasSize.x * 0.5f),
-						int(fourierPoint_[1].y + windowCenter.y),
-						int(fourierPoint_[0].x + windowCenter.x),
-						int(fourierPoint_[1].y + windowCenter.y),
-						0xf542efff
-					);
-
-					Novice::DrawLine(
-						int(fourierPoint_[0].x + windowCenter.x),
-						int(fourierPoint_[0].y + windowCenter.y + canvasSize.y * 0.5f),
-						int(fourierPoint_[0].x + windowCenter.x),
-						int(fourierPoint_[1].y + windowCenter.y),
-						0x42a7f5ff
-					);
-
-					Novice::DrawEllipse(
-						int(fourierPoint_[1].x + windowCenter.x + canvasSize.x * 0.5f),
-						int(fourierPoint_[1].y + windowCenter.y),
-						4,
-						4,
-						0.0f,
-						0xf542efff,
-						kFillModeSolid
-					);
-
-					Novice::DrawEllipse(
-						int(fourierPoint_[0].x + windowCenter.x),
-						int(fourierPoint_[0].y + windowCenter.y + canvasSize.y * 0.5f),
-						4,
-						4,
-						0.0f,
-						0x42a7f5ff,
-						kFillModeSolid
-					);
 				}
 			}
 
 			Novice::DrawEllipse(
 				int(windowCenter.x + fourierPoint_[0].x),
-				int(windowCenter.y + fourierPoint_[1].y),
+				int(windowCenter.y + fourierPoint_[0].y),
 				10, 10, 0.0f,
 				0x000000ff,
 				kFillModeSolid
 			);
 
-			for(int i = 0; i < container_[0].positionX_.size() - 1; i++){
-				/*Novice::ScreenPrintf(180 + 100 * i, 0, "[%.2f], ", container_[0].positionX_[i]);
-				Novice::ScreenPrintf(180 + 100 * i, 20, "[%.2f], ", FFTX_[i].real());
-				Novice::ScreenPrintf(180 + 100 * i, 40, "[%.2f], ", FFTX_[i].imag());
-				Novice::ScreenPrintf(180 + 100 * i, 60, "[%.2f], ", IFFTX_[i].real());*/
-			}
 		}
 	}
 
@@ -318,6 +209,25 @@ std::vector<float> Scene_Game::Exponentiation(std::vector<float> data) {
 	// データ数を2のべき乗個にするため、差の個数分、0で埋める
 	for(int j = 0; j < i; j++) {
 		data.push_back(0.0f);
+	}
+
+	return data;
+}
+
+std::vector<Vec2> Scene_Game::Exponentiation(std::vector<Vec2> data) {
+
+	assert(data.size() >= 2);
+
+	// iをcontainerのデータ数以上で一番近い2のべき乗の数にする
+	size_t i = 2;
+	for(i = 2; i < data.size(); i *= 2) {}
+
+	// iとcontainerのデータ数の差を求める
+	i = i - data.size();
+
+	// データ数を2のべき乗個にするため、差の個数分、0で埋める
+	for(int j = 0; j < i; j++) {
+		data.push_back({ 0.0f,0.0f });
 	}
 
 	return data;
@@ -390,6 +300,45 @@ std::vector<std::complex<float>> Scene_Game::FFT(const std::vector<float>& data)
 	return result;
 }
 
+std::vector<std::complex<float>> Scene_Game::FFT(const std::vector<Vec2>& data)
+{
+	// データ数を2の累乗にする
+	std::vector<Vec2>exData = Exponentiation(data);
+	std::vector<std::complex<float>>tmp(exData.size(), 0);
+	std::vector<std::complex<float>>result(exData.size(), 0);
+	for(int i = 0; i < exData.size(); i++){
+		tmp[i].real(exData[i].x);
+		tmp[i].imag(exData[i].y);
+	}
+
+	// バタフライ演算をして結果を求める
+	Butterfly(&tmp, false);
+
+	// 要素を表すのに必要な最低のビット数を求める
+	int bitMax = 1;
+	for(int i = 2; i < exData.size(); i *= 2){ bitMax++; }
+
+	// ビットの左右反転と要素の入れ替え
+	for(int i = 0; i < exData.size(); i++){
+
+		uint32_t indexNum = i;
+		uint32_t reserved = 0;
+
+		for(int j = 0; j < bitMax; j++){
+			reserved |= indexNum & 0x1;
+			if(j != bitMax - 1){
+				indexNum >>= 1;
+				reserved <<= 1;
+			}
+		}
+
+		// 反転して求めた要素を複素数ベクトルの実部に代入
+		result[i] = tmp[reserved];
+	}
+
+	return result;
+}
+
 std::vector<std::complex<float>> Scene_Game::DFT(const std::vector<float>& data)
 {
 	float PI2 = float(2.0 * M_PI);
@@ -402,6 +351,34 @@ std::vector<std::complex<float>> Scene_Game::DFT(const std::vector<float>& data)
 	for(int i = 0; i < indexSize; i++){
 		// 複素数として計算するため、floatのデータを複素数型complexの実部にコピー。虚部は0。
 		tmp[i].real(data[i]);
+	}
+
+	for(int i = 0; i < indexSize; i++){// いまどのデータをフーリエ変換しているか。公式でいう"t"。
+
+		for(int j = 0; j < indexSize; j++){// ここからフーリエ変換の本体
+
+			float angle = (PI2 * i * j) / float(indexSize);// 2πtx/Nの部分
+			result[i] += tmp[j] * std::exp(-imaginary * angle);// f(x) * e を計算 (std::exp()が"e"を作成してくれる関数)
+
+		}
+	}
+
+	return result;
+}
+
+std::vector<std::complex<float>> Scene_Game::DFT(const std::vector<Vec2>& data)
+{
+	float PI2 = float(2.0 * M_PI);
+	int indexSize = int(data.size());
+
+	std::vector<std::complex<float>> tmp(indexSize, std::complex<float>(0.0f, 0.0f));
+	std::vector<std::complex<float>> result(indexSize, std::complex<float>(0.0f, 0.0f));
+	std::complex<float>imaginary(0, 1);
+
+	for(int i = 0; i < indexSize; i++){
+		// 複素数として計算するため、Vec2のデータを複素数にコピー
+		tmp[i].real(data[i].x);
+		tmp[i].imag(data[i].y);
 	}
 
 	for(int i = 0; i < indexSize; i++){// いまどのデータをフーリエ変換しているか。公式でいう"t"。

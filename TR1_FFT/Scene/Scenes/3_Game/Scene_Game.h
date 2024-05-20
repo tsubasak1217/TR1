@@ -20,26 +20,26 @@ public:
 
 private:
 	bool isDraw_;
+	int drawCount_;
 	int frameCount_;
 	int getFrame_;
 	std::vector<Container> container_;
-	std::vector<std::complex<float>> FFTX_;
-	std::vector<std::complex<float>> FFTY_;
-	std::vector<std::complex<float>> IDFTX_;
-	std::vector<std::complex<float>> IFFTX_;
-	std::vector<std::complex<float>> DFTX_;
-	std::vector<FFTResult> resultX_;
-	std::vector<FFTResult> resultY_;
-	float nyquist_;
+	std::vector<std::complex<float>> FFT_[2];
+	std::vector<std::complex<float>> DFT_[2];
+	std::vector<std::complex<float>> IDFT_[2];
+	std::vector<std::complex<float>> IFFT_[2];
 
 	bool isDrawFourier_;
 	Vec2 fourierPoint_[2];
 
 private:
 	std::vector<float> Exponentiation(std::vector<float> data);
+	std::vector<Vec2> Exponentiation(std::vector<Vec2> data);
 	void Butterfly(std::vector<std::complex<float>>* data,bool inverse);
 	std::vector<std::complex<float>> FFT(const std::vector<float>& data);
+	std::vector<std::complex<float>> FFT(const std::vector<Vec2>& data);
 	std::vector<std::complex<float>> DFT(const std::vector<float>& data);
+	std::vector<std::complex<float>> DFT(const std::vector<Vec2>& data);
 	std::vector<std::complex<float>> IDFT(const std::vector<std::complex<float>>& FFTdata);
 	std::complex<float> IDFT(const std::vector<std::complex<float>>& FFTdata,float time);
 	std::vector<std::complex<float>> IFFT(const std::vector<std::complex<float>>& FFTdata);

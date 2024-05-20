@@ -6,11 +6,10 @@
 struct Container {
 	std::vector<float>positionX_;
 	std::vector<float>positionY_;
+	std::vector<Vec2>pos_[2];
 
 	std::vector<FFTResult> resultX_;
 	std::vector<FFTResult> resultY_;
-	float maxLevel_;
-	bool isDrawFourier_;
 
 	void Draw(int getFrame);
 };
