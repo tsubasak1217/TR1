@@ -76,6 +76,30 @@ struct Vector2 final {
 		x *= obj;
 		y *= obj;
 	}
+
+	// DEVIDE----------------------
+	Vector2 operator/(const Vector2& obj) {
+		Vector2 result;
+		result.x = x / obj.x;
+		result.y = y / obj.y;
+
+		return result;
+	}
+	void operator/=(const Vector2& obj) {
+		x /= obj.x;
+		y /= obj.y;
+	}
+	Vector2 operator/(float obj) {
+		Vector2 result;
+		result.x = x / obj;
+		result.y = y / obj;
+
+		return result;
+	}
+	void operator/=(float obj) {
+		x /= obj;
+		y /= obj;
+	}
 };
 using Vec2 = Vector2<float>;
 

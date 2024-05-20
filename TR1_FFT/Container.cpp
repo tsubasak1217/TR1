@@ -7,6 +7,10 @@ void Container::Draw(int getFrame) {
 
 	int size = 1;
 	getFrame;
+	Vec2 fourierCenter[2]; 
+	fourierCenter[0] = windowCenter + canvasSize * 0.25f;
+	fourierCenter[1] = windowCenter - canvasSize * 0.25f;
+
 
 	for(int n = 0; n < 2; n++){
 
@@ -15,7 +19,7 @@ void Container::Draw(int getFrame) {
 		n == 0 ? color = 0xff0000ff : color = 0x0000ffff;
 
 		for(int n2 = 0; n2 < tmp.size(); n2++) {
-			tmp[n2] += windowCenter;
+			tmp[n2] += fourierCenter[n];
 		}
 
 		if(tmp.size() > 3) {

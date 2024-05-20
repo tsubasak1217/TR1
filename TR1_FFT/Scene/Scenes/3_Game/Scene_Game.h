@@ -30,6 +30,7 @@ private:
 	std::vector<std::complex<float>> IFFT_[2];
 
 	bool isDrawFourier_;
+	Vec2 fourierCenter_[2];
 	Vec2 fourierPoint_[2];
 
 private:

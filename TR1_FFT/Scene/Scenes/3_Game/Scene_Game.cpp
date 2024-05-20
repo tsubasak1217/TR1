@@ -27,6 +27,9 @@ void Scene_Game::Init() {
 	getFrame_ = 1;
 	container_.clear();
 	container_.push_back(Container());
+
+	fourierCenter_[0] = windowCenter + canvasSize * 0.25f;
+	fourierCenter_[1] = windowCenter - canvasSize * 0.25f;
 }
 
 void Scene_Game::Update() {
@@ -138,8 +141,8 @@ void Scene_Game::Update() {
 		if(InputKey::mousePress_[0]){
 			if(frameCount_ % getFrame_ == 0) {
 				container_.back().pos_[0 + drawCount_].push_back({
-					float(InputKey::mousePos_.x) - windowCenter.x,
-					float(InputKey::mousePos_.y) - windowCenter.y,
+					float(InputKey::mousePos_.x) - fourierCenter_[0 + drawCount_].x,
+					float(InputKey::mousePos_.y) - fourierCenter_[0 + drawCount_].y
 					}
 				);
 			}
@@ -206,57 +209,66 @@ void Scene_Game::Draw() {
 
 					// 座標の決定
 					fourierPos[n] += (FFT_[n][i] / float(FFT_[n].size())) * std::polar(1.0f, theta[n]);
-				}
 
+					MyFunc::DrawQuad(
+						fourierCenter_[n] + Vec2(fourierPos[n].real(),fourierPos[n].imag()),
+						{
+						MyFunc::Length(Vec2(FFT_[n][i].real(),FFT_[n][i].imag()) / float(FFT_[n].size())),
+						MyFunc::Length(Vec2(FFT_[n][i].real(),FFT_[n][i].imag()) / float(FFT_[n].size()))
+						},
+						0, 0, 128, 128, 1.0f, 1.0f,
+						"ellipseLine", 0.0f, 0x00ff00ff
+					);
+
+				}
 				fourierPoint_[n] = { fourierPos[n].real(),fourierPos[n].imag() };
 			}
 
-
 			Novice::DrawLine(
-				int(windowCenter.x + fourierPoint_[0].x),
-				int(windowCenter.y + fourierPoint_[0].y),
-				int(windowCenter.x + fourierPoint_[0].x),
-				int(windowCenter.y + fourierPoint_[1].y),
+				int(fourierCenter_[0].x + fourierPoint_[0].x),
+				int(fourierCenter_[0].y + fourierPoint_[0].y),
+				int(fourierCenter_[0].x + fourierPoint_[0].x),
+				int(fourierCenter_[0].y + fourierPoint_[1].y),
 				0x00ffffff
 			);
 
 			Novice::DrawLine(
-				int(windowCenter.x + fourierPoint_[0].x),
-				int(windowCenter.y + fourierPoint_[0].y),
-				int(windowCenter.x + fourierPoint_[1].x),
-				int(windowCenter.y + fourierPoint_[0].y),
+				int(fourierCenter_[0].x + fourierPoint_[0].x),
+				int(fourierCenter_[0].y + fourierPoint_[0].y),
+				int(fourierCenter_[0].x + fourierPoint_[1].x),
+				int(fourierCenter_[0].y + fourierPoint_[0].y),
 				0x00ffffff
 			);
 
 			Novice::DrawLine(
-				int(windowCenter.x + fourierPoint_[1].x),
-				int(windowCenter.y + fourierPoint_[1].y),
-				int(windowCenter.x + fourierPoint_[0].x),
-				int(windowCenter.y + fourierPoint_[1].y),
+				int(fourierCenter_[1].x + fourierPoint_[1].x),
+				int(fourierCenter_[1].y + fourierPoint_[1].y),
+				int(fourierCenter_[1].x + fourierPoint_[0].x),
+				int(fourierCenter_[1].y + fourierPoint_[1].y),
 				0x00ffffff
 			);
 
 			Novice::DrawLine(
-				int(windowCenter.x + fourierPoint_[1].x),
-				int(windowCenter.y + fourierPoint_[1].y),
-				int(windowCenter.x + fourierPoint_[1].x),
-				int(windowCenter.y + fourierPoint_[0].y),
+				int(fourierCenter_[1].x + fourierPoint_[1].x),
+				int(fourierCenter_[1].y + fourierPoint_[1].y),
+				int(fourierCenter_[1].x + fourierPoint_[1].x),
+				int(fourierCenter_[1].y + fourierPoint_[0].y),
 				0x00ffffff
 			);
 
 			//
 			Novice::DrawEllipse(
-				int(windowCenter.x + fourierPoint_[0].x),
-				int(windowCenter.y + fourierPoint_[0].y),
-				10, 10, 0.0f,
+				int(fourierCenter_[1].x + fourierPoint_[0].x),
+				int(fourierCenter_[1].y + fourierPoint_[0].y),
+				3, 3, 0.0f,
 				0x000000ff,
 				kFillModeSolid
 			);
 
 			Novice::DrawEllipse(
-				int(windowCenter.x + fourierPoint_[1].x),
-				int(windowCenter.y + fourierPoint_[1].y),
-				10, 10, 0.0f,
+				int(fourierCenter_[0].x + fourierPoint_[1].x),
+				int(fourierCenter_[0].y + fourierPoint_[1].y),
+				3, 3, 0.0f,
 				0x000000ff,
 				kFillModeSolid
 			);
@@ -264,16 +276,16 @@ void Scene_Game::Draw() {
 
 			//
 			Novice::DrawEllipse(
-				int(windowCenter.x + fourierPoint_[0].x),
-				int(windowCenter.y + fourierPoint_[1].y),
+				int(fourierCenter_[0].x + fourierPoint_[0].x),
+				int(fourierCenter_[0].y + fourierPoint_[1].y),
 				10, 10, 0.0f,
 				0xffff00ff,
 				kFillModeSolid
 			);
 
 			Novice::DrawEllipse(
-				int(windowCenter.x + fourierPoint_[1].x),
-				int(windowCenter.y + fourierPoint_[0].y),
+				int(fourierCenter_[1].x + fourierPoint_[1].x),
+				int(fourierCenter_[1].y + fourierPoint_[0].y),
 				10, 10, 0.0f,
 				0xffff00ff,
 				kFillModeSolid
