@@ -33,19 +33,66 @@ void Scene_Game::Update() {
 	if(InputKey::trigger[DIK_RETURN]) {
 		//SceneManager::SetScene(new Scene_Clear());
 	}
+	
+	frameCount_++;
 
 	if(InputKey::mouseTrigger_[1]) {
-		// データをFFTする
-		for(int i = 0; i < 2; i++){
-			if(container_.back().pos_[i].size() > 1){
-				FFT_[i] = FFT(container_.back().pos_[i]);
-				DFT_[i] = DFT(container_.back().pos_[i]);
-				IFFT_[i] = IFFT(FFT_[i]);
-				IDFT_[i] = IDFT(DFT_[i]);
+
+		if(drawCount_ > 1){
+
+			drawCount_ = 0;
+
+			int size[2] = {
+				int(container_.back().pos_[0].size()),
+				int(container_.back().pos_[1].size())
+			};
+
+			if(size[0] > size[1]){
+				container_.back().swapPos_[0].clear();
+				container_.back().swapPos_[1].clear();
+				container_.back().swapPos_[0].resize(size[0]);
+				container_.back().swapPos_[1].resize(size[0]);
+
+				for(int i = 0; i < size[1]; i++){
+					container_.back().swapPos_[0][i].x = container_.back().pos_[1][i].x;
+					container_.back().swapPos_[1][i].y = container_.back().pos_[1][i].y;
+				}
+
+				for(int i = 0; i < size[0]; i++){
+					container_.back().swapPos_[1][i].x = container_.back().pos_[0][i].x;
+					container_.back().swapPos_[0][i].y = container_.back().pos_[0][i].y;
+				}
+
+			} else{
+				container_.back().swapPos_[0].clear();
+				container_.back().swapPos_[1].clear();
+				container_.back().swapPos_[0].resize(size[1]);
+				container_.back().swapPos_[1].resize(size[1]);
+
+				for(int i = 0; i < size[0]; i++){
+					container_.back().swapPos_[0][i].x = container_.back().pos_[0][i].x;
+					container_.back().swapPos_[1][i].y = container_.back().pos_[0][i].y;
+				}
+
+				for(int i = 0; i < size[1]; i++){
+					container_.back().swapPos_[1][i].x = container_.back().pos_[1][i].x;
+					container_.back().swapPos_[0][i].y = container_.back().pos_[1][i].y;
+				}
 			}
+
+			// データをFFTする
+			for(int i = 0; i < 2; i++){
+				if(container_.back().pos_[i].size() > 1){
+					FFT_[i] = FFT(container_.back().swapPos_[i]);
+					DFT_[i] = DFT(container_.back().swapPos_[i]);
+					IFFT_[i] = IFFT(FFT_[i]);
+					IDFT_[i] = IDFT(DFT_[i]);
+				}
+			}
+
+			isDrawFourier_ = true;
 		}
 
-		isDrawFourier_ = true;
 	}
 
 	// 描画フラグをオンにする
@@ -58,16 +105,12 @@ void Scene_Game::Update() {
 				container_.back().positionX_.clear();
 				container_.back().positionY_.clear();
 
-				if(drawCount_ > 1){
-					drawCount_ = 0;
-				}
-				
 				if(drawCount_ == 0){
 					container_.back().pos_[0].clear();
 				} else if(drawCount_ == 1){
 					container_.back().pos_[1].clear();
-				} 
-				
+				}
+
 
 				isDrawFourier_ = false;
 				theta[0] = 0.0f;
@@ -79,7 +122,6 @@ void Scene_Game::Update() {
 	// 描画フラグが立っているときの処理
 	if(isDraw_) {
 
-		frameCount_++;
 
 		// マウスが離されたら描画終了
 		if(InputKey::mouseRelease_[0]) {
@@ -163,15 +205,46 @@ void Scene_Game::Draw() {
 					theta[1] = (float(2.0 * M_PI) * i * t) / float(FFT_[1].size());
 
 					// 座標の決定
-					fourierPos[0] += (FFT_[0][i] / float(FFT_[0].size())) * std::polar(1.0f, theta[0]);
-					fourierPos[1] += (FFT_[1][i] / float(FFT_[1].size())) * std::polar(1.0f, theta[1]);
-
-					fourierPoint_[0] = { fourierPos[0].real(),fourierPos[0].imag() };
-					fourierPoint_[1] = { fourierPos[1].imag(),fourierPos[1].real() };
-
+					fourierPos[n] += (FFT_[n][i] / float(FFT_[n].size())) * std::polar(1.0f, theta[n]);
 				}
+
+				fourierPoint_[n] = { fourierPos[n].real(),fourierPos[n].imag() };
 			}
 
+
+			Novice::DrawLine(
+				int(windowCenter.x + fourierPoint_[0].x),
+				int(windowCenter.y + fourierPoint_[0].y),
+				int(windowCenter.x + fourierPoint_[0].x),
+				int(windowCenter.y + fourierPoint_[1].y),
+				0x00ffffff
+			);
+
+			Novice::DrawLine(
+				int(windowCenter.x + fourierPoint_[0].x),
+				int(windowCenter.y + fourierPoint_[0].y),
+				int(windowCenter.x + fourierPoint_[1].x),
+				int(windowCenter.y + fourierPoint_[0].y),
+				0x00ffffff
+			);
+
+			Novice::DrawLine(
+				int(windowCenter.x + fourierPoint_[1].x),
+				int(windowCenter.y + fourierPoint_[1].y),
+				int(windowCenter.x + fourierPoint_[0].x),
+				int(windowCenter.y + fourierPoint_[1].y),
+				0x00ffffff
+			);
+
+			Novice::DrawLine(
+				int(windowCenter.x + fourierPoint_[1].x),
+				int(windowCenter.y + fourierPoint_[1].y),
+				int(windowCenter.x + fourierPoint_[1].x),
+				int(windowCenter.y + fourierPoint_[0].y),
+				0x00ffffff
+			);
+
+			//
 			Novice::DrawEllipse(
 				int(windowCenter.x + fourierPoint_[0].x),
 				int(windowCenter.y + fourierPoint_[0].y),
@@ -180,6 +253,31 @@ void Scene_Game::Draw() {
 				kFillModeSolid
 			);
 
+			Novice::DrawEllipse(
+				int(windowCenter.x + fourierPoint_[1].x),
+				int(windowCenter.y + fourierPoint_[1].y),
+				10, 10, 0.0f,
+				0x000000ff,
+				kFillModeSolid
+			);
+
+
+			//
+			Novice::DrawEllipse(
+				int(windowCenter.x + fourierPoint_[0].x),
+				int(windowCenter.y + fourierPoint_[1].y),
+				10, 10, 0.0f,
+				0xffff00ff,
+				kFillModeSolid
+			);
+
+			Novice::DrawEllipse(
+				int(windowCenter.x + fourierPoint_[1].x),
+				int(windowCenter.y + fourierPoint_[0].y),
+				10, 10, 0.0f,
+				0xffff00ff,
+				kFillModeSolid
+			);
 		}
 	}
 
