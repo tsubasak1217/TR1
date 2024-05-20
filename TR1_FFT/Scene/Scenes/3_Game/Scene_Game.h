@@ -28,6 +28,7 @@ private:
 	std::vector<std::complex<float>> DFT_[2];
 	std::vector<std::complex<float>> IDFT_[2];
 	std::vector<std::complex<float>> IFFT_[2];
+	std::vector<Vec2>drawPos_[2];
 
 	bool isDrawFourier_;
 	Vec2 fourierCenter_[2];

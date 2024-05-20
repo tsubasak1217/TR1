@@ -36,7 +36,21 @@ void Scene_Game::Update() {
 	if(InputKey::trigger[DIK_RETURN]) {
 		//SceneManager::SetScene(new Scene_Clear());
 	}
-	
+
+	if(InputKey::trigger[DIK_R]) {
+		container_.back().positionX_.clear();
+		container_.back().positionY_.clear();
+		container_.back().pos_[0].clear();
+		container_.back().pos_[1].clear();
+		container_.back().isDrawFourier_ = false;
+
+		isDraw_ = false;
+		isDrawFourier_ = false;
+		drawCount_ = 0;
+		theta[0] = 0.0f;
+		theta[1] = 0.0f;
+	}
+
 	frameCount_++;
 
 	if(InputKey::mouseTrigger_[1]) {
@@ -55,45 +69,59 @@ void Scene_Game::Update() {
 				container_.back().swapPos_[1].clear();
 				container_.back().swapPos_[0].resize(size[0]);
 				container_.back().swapPos_[1].resize(size[0]);
-
-				for(int i = 0; i < size[1]; i++){
-					container_.back().swapPos_[0][i].x = container_.back().pos_[1][i].x;
-					container_.back().swapPos_[1][i].y = container_.back().pos_[1][i].y;
-				}
-
-				for(int i = 0; i < size[0]; i++){
-					container_.back().swapPos_[1][i].x = container_.back().pos_[0][i].x;
-					container_.back().swapPos_[0][i].y = container_.back().pos_[0][i].y;
-				}
-
 			} else{
 				container_.back().swapPos_[0].clear();
 				container_.back().swapPos_[1].clear();
 				container_.back().swapPos_[0].resize(size[1]);
 				container_.back().swapPos_[1].resize(size[1]);
+			}
 
-				for(int i = 0; i < size[0]; i++){
-					container_.back().swapPos_[0][i].x = container_.back().pos_[0][i].x;
-					container_.back().swapPos_[1][i].y = container_.back().pos_[0][i].y;
-				}
+			// たすきのように要素を入れていく
+			for(int i = 0; i < size[1]; i++){
+				container_.back().swapPos_[0][i].x = container_.back().pos_[1][i].x;
+				container_.back().swapPos_[1][i].y = container_.back().pos_[1][i].y;
 
-				for(int i = 0; i < size[1]; i++){
-					container_.back().swapPos_[1][i].x = container_.back().pos_[1][i].x;
-					container_.back().swapPos_[0][i].y = container_.back().pos_[1][i].y;
+				if(i == size[1] - 1){
+					if(size[1] < size[0]){
+						int n = size[0] - size[1];
+						for(int j = 0; j <= n; j++){
+							container_.back().swapPos_[0][i + j].x = container_.back().swapPos_[0][i].x;
+							container_.back().swapPos_[1][i + j].y = container_.back().swapPos_[1][i].y;
+						}
+					}
 				}
 			}
+
+			for(int i = 0; i < size[0]; i++){
+				container_.back().swapPos_[1][i].x = container_.back().pos_[0][i].x;
+				container_.back().swapPos_[0][i].y = container_.back().pos_[0][i].y;
+
+				if(i == size[0] - 1){
+					if(size[0] < size[1]){
+						int n = size[1] - size[0];
+						for(int j = 0; j <= n; j++){
+							container_.back().swapPos_[1][i + j].x = container_.back().swapPos_[1][i].x;
+							container_.back().swapPos_[0][i + j].y = container_.back().swapPos_[0][i].y;
+						}
+					}
+				}
+			}
+
 
 			// データをFFTする
 			for(int i = 0; i < 2; i++){
 				if(container_.back().pos_[i].size() > 1){
-					FFT_[i] = FFT(container_.back().swapPos_[i]);
+					FFT_[i] = DFT(container_.back().swapPos_[i]);
 					DFT_[i] = DFT(container_.back().swapPos_[i]);
-					IFFT_[i] = IFFT(FFT_[i]);
+					//IFFT_[i] = IFFT(FFT_[i]);
 					IDFT_[i] = IDFT(DFT_[i]);
 				}
+
+				drawPos_[i].resize(FFT_[0].size());
 			}
 
 			isDrawFourier_ = true;
+			container_.back().isDrawFourier_ = true;
 		}
 
 	}
@@ -107,6 +135,8 @@ void Scene_Game::Update() {
 
 				container_.back().positionX_.clear();
 				container_.back().positionY_.clear();
+				drawPos_[0].clear();
+				drawPos_[1].clear();
 
 				if(drawCount_ == 0){
 					container_.back().pos_[0].clear();
@@ -114,7 +144,7 @@ void Scene_Game::Update() {
 					container_.back().pos_[1].clear();
 				}
 
-
+				container_.back().isDrawFourier_ = false;
 				isDrawFourier_ = false;
 				theta[0] = 0.0f;
 				theta[1] = 0.0f;
@@ -140,20 +170,27 @@ void Scene_Game::Update() {
 		// getFrameのフレームごとに座標を取得してコンテナに入れる
 		if(InputKey::mousePress_[0]){
 			if(frameCount_ % getFrame_ == 0) {
-				container_.back().pos_[0 + drawCount_].push_back({
-					float(InputKey::mousePos_.x) - fourierCenter_[0 + drawCount_].x,
-					float(InputKey::mousePos_.y) - fourierCenter_[0 + drawCount_].y
-					}
-				);
+
+				if(drawCount_ == 0){
+					container_.back().pos_[0 + drawCount_].push_back({
+						float(InputKey::mousePos_.x) - fourierCenter_[1].x,
+						float(InputKey::mousePos_.y) - fourierCenter_[0].y
+						}
+					);
+				} else{
+					container_.back().pos_[0 + drawCount_].push_back({
+						float(InputKey::mousePos_.x) - fourierCenter_[0].x,
+						float(InputKey::mousePos_.y) - fourierCenter_[1].y
+						}
+					);
+				}
 			}
 		}
 	}
 
 	if(isDrawFourier_){
-		if(frameCount_ % (getFrame_ * 2) == 0){
-			t++;
-			t > FFT_[0].size() ? t = 0.0f : t;
-		}
+		t += 0.5f;
+		t >= FFT_[0].size() - 1 ? t = 0.0f : t;
 	} else{
 		t = 0.0f;
 	}
@@ -190,12 +227,12 @@ void Scene_Game::Draw() {
 
 	if(isDrawFourier_){
 
-
-		if(frameCount_ % getFrame_ == 0){
+		//if(frameCount_ % getFrame_ == 0){
 
 			// 初期化
-			fourierPoint_[0] = { 0.0f,0.0f };
-			fourierPoint_[1] = { 0.0f,0.0f };
+			fourierPoint_[0] = fourierCenter_[0];
+			fourierPoint_[1] = fourierCenter_[1];
+			Vec2 tmp[2] = { fourierPoint_[0],fourierPoint_[1] };
 
 			std::complex<float>fourierPos[2];
 			fourierPos[0] = { 0.0f,0.0f };
@@ -204,46 +241,49 @@ void Scene_Game::Draw() {
 			for(int n = 0; n < 2; n++){
 				for(int i = 0; i < FFT_[n].size(); i++){
 
-					theta[0] = (float(2.0 * M_PI) * i * t) / float(FFT_[0].size());
-					theta[1] = (float(2.0 * M_PI) * i * t) / float(FFT_[1].size());
-
-					// 座標の決定
-					fourierPos[n] += (FFT_[n][i] / float(FFT_[n].size())) * std::polar(1.0f, theta[n]);
+					theta[n] = (float(2.0 * M_PI) * i * int(t)) / float(FFT_[n].size());
 
 					MyFunc::DrawQuad(
-						fourierCenter_[n] + Vec2(fourierPos[n].real(),fourierPos[n].imag()),
+						fourierCenter_[n] + Vec2(fourierPos[n].real(), fourierPos[n].imag()),
 						{
-						MyFunc::Length(Vec2(FFT_[n][i].real(),FFT_[n][i].imag()) / float(FFT_[n].size())),
-						MyFunc::Length(Vec2(FFT_[n][i].real(),FFT_[n][i].imag()) / float(FFT_[n].size()))
+						MyFunc::Length(Vec2(FFT_[n][i].real(),FFT_[n][i].imag())) / float(FFT_[n].size()) * 2.0f,
+						MyFunc::Length(Vec2(FFT_[n][i].real(),FFT_[n][i].imag())) / float(FFT_[n].size()) * 2.0f
 						},
 						0, 0, 128, 128, 1.0f, 1.0f,
 						"ellipseLine", 0.0f, 0x00ff00ff
 					);
 
+					Novice::DrawEllipse(
+						int(fourierCenter_[n].x + fourierPos[n].real()),
+						int(fourierCenter_[n].y + fourierPos[n].imag()),
+						3, 3, 0.0f,
+						0x00ffffff,
+						kFillModeSolid
+					);
+
+					// 座標の決定
+					fourierPos[n] += (FFT_[n][i] / float(FFT_[n].size())) * std::polar(1.0f, theta[n]);
+
+					Novice::DrawLine(
+						int(tmp[n].x),
+						int(tmp[n].y),
+						int(fourierCenter_[n].x + fourierPos[n].real()),
+						int(fourierCenter_[n].y + fourierPos[n].imag()),
+						0x00ffffff
+					);
+
+					tmp[n] = {
+						fourierCenter_[n].x + fourierPos[n].real(),
+						fourierCenter_[n].y + fourierPos[n].imag()
+					};
 				}
 				fourierPoint_[n] = { fourierPos[n].real(),fourierPos[n].imag() };
 			}
 
 			Novice::DrawLine(
-				int(fourierCenter_[0].x + fourierPoint_[0].x),
-				int(fourierCenter_[0].y + fourierPoint_[0].y),
-				int(fourierCenter_[0].x + fourierPoint_[0].x),
-				int(fourierCenter_[0].y + fourierPoint_[1].y),
-				0x00ffffff
-			);
-
-			Novice::DrawLine(
-				int(fourierCenter_[0].x + fourierPoint_[0].x),
-				int(fourierCenter_[0].y + fourierPoint_[0].y),
-				int(fourierCenter_[0].x + fourierPoint_[1].x),
-				int(fourierCenter_[0].y + fourierPoint_[0].y),
-				0x00ffffff
-			);
-
-			Novice::DrawLine(
 				int(fourierCenter_[1].x + fourierPoint_[1].x),
 				int(fourierCenter_[1].y + fourierPoint_[1].y),
-				int(fourierCenter_[1].x + fourierPoint_[0].x),
+				int(fourierCenter_[0].x + fourierPoint_[0].x),
 				int(fourierCenter_[1].y + fourierPoint_[1].y),
 				0x00ffffff
 			);
@@ -252,22 +292,38 @@ void Scene_Game::Draw() {
 				int(fourierCenter_[1].x + fourierPoint_[1].x),
 				int(fourierCenter_[1].y + fourierPoint_[1].y),
 				int(fourierCenter_[1].x + fourierPoint_[1].x),
-				int(fourierCenter_[1].y + fourierPoint_[0].y),
+				int(fourierCenter_[0].y + fourierPoint_[0].y),
+				0x00ffffff
+			);
+
+			Novice::DrawLine(
+				int(fourierCenter_[0].x + fourierPoint_[0].x),
+				int(fourierCenter_[0].y + fourierPoint_[0].y),
+				int(fourierCenter_[0].x + fourierPoint_[0].x),
+				int(fourierCenter_[1].y + fourierPoint_[1].y),
+				0x00ffffff
+			);
+
+			Novice::DrawLine(
+				int(fourierCenter_[0].x + fourierPoint_[0].x),
+				int(fourierCenter_[0].y + fourierPoint_[0].y),
+				int(fourierCenter_[1].x + fourierPoint_[1].x),
+				int(fourierCenter_[0].y + fourierPoint_[0].y),
 				0x00ffffff
 			);
 
 			//
 			Novice::DrawEllipse(
-				int(fourierCenter_[1].x + fourierPoint_[0].x),
-				int(fourierCenter_[1].y + fourierPoint_[0].y),
+				int(fourierCenter_[0].x + fourierPoint_[0].x),
+				int(fourierCenter_[0].y + fourierPoint_[0].y),
 				3, 3, 0.0f,
 				0x000000ff,
 				kFillModeSolid
 			);
 
 			Novice::DrawEllipse(
-				int(fourierCenter_[0].x + fourierPoint_[1].x),
-				int(fourierCenter_[0].y + fourierPoint_[1].y),
+				int(fourierCenter_[1].x + fourierPoint_[1].x),
+				int(fourierCenter_[1].y + fourierPoint_[1].y),
 				3, 3, 0.0f,
 				0x000000ff,
 				kFillModeSolid
@@ -277,7 +333,7 @@ void Scene_Game::Draw() {
 			//
 			Novice::DrawEllipse(
 				int(fourierCenter_[0].x + fourierPoint_[0].x),
-				int(fourierCenter_[0].y + fourierPoint_[1].y),
+				int(fourierCenter_[1].y + fourierPoint_[1].y),
 				10, 10, 0.0f,
 				0xffff00ff,
 				kFillModeSolid
@@ -285,12 +341,43 @@ void Scene_Game::Draw() {
 
 			Novice::DrawEllipse(
 				int(fourierCenter_[1].x + fourierPoint_[1].x),
-				int(fourierCenter_[1].y + fourierPoint_[0].y),
+				int(fourierCenter_[0].y + fourierPoint_[0].y),
 				10, 10, 0.0f,
 				0xffff00ff,
 				kFillModeSolid
+			);
+		//}
+
+
+		// 軌道の描画
+		drawPos_[0][int(t)] = {
+			fourierCenter_[0].x + fourierPoint_[0].x,
+			fourierCenter_[1].y + fourierPoint_[1].y
+		};
+
+		drawPos_[1][int(t)] = {
+			fourierCenter_[1].x + fourierPoint_[1].x,
+			fourierCenter_[0].y + fourierPoint_[0].y
+		};
+
+		for(int i = 0; i < int(t) - 2; i++){
+			Novice::DrawLine(
+				int(drawPos_[0][i].x),
+				int(drawPos_[0][i].y),
+				int(drawPos_[0][i + 1].x),
+				int(drawPos_[0][i + 1].y),
+				0x0000ffff
+			);
+
+			Novice::DrawLine(
+				int(drawPos_[1][i].x),
+				int(drawPos_[1][i].y),
+				int(drawPos_[1][i + 1].x),
+				int(drawPos_[1][i + 1].y),
+				0xff0000ff
 			);
 		}
+
 	}
 
 #ifdef _DEBUG

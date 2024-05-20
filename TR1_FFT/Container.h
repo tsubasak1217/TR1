@@ -11,6 +11,7 @@ struct Container {
 
 	std::vector<FFTResult> resultX_;
 	std::vector<FFTResult> resultY_;
+	bool isDrawFourier_ = false;
 
 	void Draw(int getFrame);
 };
