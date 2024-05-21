@@ -23,11 +23,13 @@ private:
 	int drawCount_;
 	int frameCount_;
 	int getFrame_;
+	float noiseLevel_;
 	std::vector<Container> container_;
 	std::vector<std::complex<float>> FFT_[2];
 	std::vector<std::complex<float>> DFT_[2];
 	std::vector<std::complex<float>> IDFT_[2];
 	std::vector<std::complex<float>> IFFT_[2];
+	std::vector<FFTResult> FFTResult_[2];
 	std::vector<Vec2>drawPos_[2];
 
 	bool isDrawFourier_;

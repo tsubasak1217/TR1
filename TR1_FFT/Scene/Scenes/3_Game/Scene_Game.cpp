@@ -6,11 +6,12 @@
 #include "SceneManager.h"
 #include "Environment.h"
 #include "MyTextureManager.h"
-
+#include <ImGui.h>
 
 std::complex<float> a;
 float theta[2] = { 0.0f };
 float t = 0.0f;
+float maxLevel = 0.0f;
 
 Scene_Game::Scene_Game() {
 	Init();
@@ -25,6 +26,7 @@ void Scene_Game::Init() {
 	drawCount_ = 0;
 	frameCount_ = 0;
 	getFrame_ = 1;
+	noiseLevel_ = 0.0f;
 	container_.clear();
 	container_.push_back(Container());
 
@@ -33,6 +35,12 @@ void Scene_Game::Init() {
 }
 
 void Scene_Game::Update() {
+
+	ImGui::Begin("NoiseLevel");
+	ImGui::SliderFloat("noiseLevel", &noiseLevel_, 0.0f, 1.0f);
+	ImGui::End();
+
+
 	if(InputKey::trigger[DIK_RETURN]) {
 		//SceneManager::SetScene(new Scene_Clear());
 	}
@@ -117,8 +125,13 @@ void Scene_Game::Update() {
 					IDFT_[i] = IDFT(DFT_[i]);
 				}
 
+				FFTResult_[i] = TransformFFT(FFT_[i]);
+				FFTResult_[i] = SortFFT(FFTResult_[i]);
 				drawPos_[i].resize(FFT_[0].size());
 			}
+
+			// 最大の振幅
+			maxLevel = FFTResult_[0][0].level > FFTResult_[1][0].level ? FFTResult_[0][0].level : FFTResult_[1][0].level;
 
 			isDrawFourier_ = true;
 			container_.back().isDrawFourier_ = true;
@@ -243,12 +256,12 @@ void Scene_Game::Draw() {
 
 					theta[n] = (float(2.0 * M_PI) * i * int(t)) / float(FFT_[n].size());
 
+					float size = MyFunc::Length(Vec2(FFT_[n][i].real(), FFT_[n][i].imag())) / float(FFT_[n].size());
+					size = size > (maxLevel * noiseLevel_) ? size * 2.0f : 0.0f;
+
 					MyFunc::DrawQuad(
 						fourierCenter_[n] + Vec2(fourierPos[n].real(), fourierPos[n].imag()),
-						{
-						MyFunc::Length(Vec2(FFT_[n][i].real(),FFT_[n][i].imag())) / float(FFT_[n].size()) * 2.0f,
-						MyFunc::Length(Vec2(FFT_[n][i].real(),FFT_[n][i].imag())) / float(FFT_[n].size()) * 2.0f
-						},
+						{size,size},
 						0, 0, 128, 128, 1.0f, 1.0f,
 						"ellipseLine", 0.0f, 0x00ff00ff
 					);
@@ -262,7 +275,11 @@ void Scene_Game::Draw() {
 					);
 
 					// 座標の決定
-					fourierPos[n] += (FFT_[n][i] / float(FFT_[n].size())) * std::polar(1.0f, theta[n]);
+					float level = MyFunc::Length(Vec2(FFT_[n][i].real(), FFT_[n][i].imag())) / float(FFT_[n].size());
+
+					if(level > maxLevel * noiseLevel_){
+						fourierPos[n] += (FFT_[n][i] / float(FFT_[n].size())) * std::polar(1.0f, theta[n]);
+					}
 
 					Novice::DrawLine(
 						int(tmp[n].x),
